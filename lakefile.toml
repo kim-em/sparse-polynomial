@@ -1,0 +1,7 @@
+name = "sparse-polynomial"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["SparsePolynomial"]
+
+[[lean_lib]]
+name = "SparsePolynomial"
