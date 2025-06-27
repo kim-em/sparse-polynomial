@@ -35,15 +35,15 @@ def mergeWithAll (m₁ m₂ : ExtTreeMap α β cmp) (f : α → Option β → Op
         r := r.insert a b
   return r
 
-theorem mem_mergeWithAll {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} {a : α} :
+@[grind =] theorem mem_mergeWithAll {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} {a : α} :
     a ∈ mergeWithAll m₁ m₂ f ↔ (a ∈ m₁ ∨ a ∈ m₂) ∧ (f a m₁[a]? m₂[a]?).isSome :=
   sorry
 
-theorem getElem?_mergeWithAll {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} :
+@[grind =] theorem getElem?_mergeWithAll {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} :
     (mergeWithAll m₁ m₂ f)[a]? = if a ∈ m₁ ∨ a ∈ m₂ then f a m₁[a]? m₂[a]? else none :=
   sorry
 
-theorem getElem_mergeWithAll {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} {a : α} {h} :
+@[grind =] theorem getElem_mergeWithAll {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} {a : α} {h} :
     (mergeWithAll m₁ m₂ f)[a] = (f a m₁[a]? m₂[a]?).get sorry :=
   sorry
 

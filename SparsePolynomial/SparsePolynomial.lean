@@ -1,14 +1,20 @@
 import SparsePolynomial.FinMap
 
 structure SparsePolynomial (β : Type v) [Zero β] where
-  coeffs : FinMap Nat β compare
+  private coeffs : FinMap Nat β compare
 
 namespace SparsePolynomial
 
 variable {β : Type v} [Zero β]
 
-instance instGetElem : GetElem (SparsePolynomial β) Nat β (fun _ _ => True) where
+instance : GetElem (SparsePolynomial β) Nat β (fun _ _ => True) where
   getElem := fun p a _ => p.coeffs[a]
+
+@[local grind] private theorem getElem_mk (coeffs : FinMap Nat β compare) (a : Nat) :
+    (SparsePolynomial.mk coeffs)[a] = coeffs[a] := rfl
+
+@[local grind] private theorem getElem_coeffs (p : SparsePolynomial β) (a : Nat) :
+    p.coeffs[a] = p[a] := rfl
 
 @[ext, grind ext]
 theorem ext {p₁ p₂ : SparsePolynomial β} (h : ∀ a : Nat, p₁[a] = p₂[a]) : p₁ = p₂ := by
@@ -28,28 +34,35 @@ instance : Inhabited (SparsePolynomial β) := ⟨0⟩
 protected def one [One β] [DecidableEq β] : SparsePolynomial β where
   coeffs := .singleton 0 1 compare
 
-instance [One β] [DecidableEq β] : One (SparsePolynomial β) := ⟨.one⟩
+instance instOne [One β] [DecidableEq β] : One (SparsePolynomial β) := ⟨.one⟩
 
 @[grind =] theorem getElem_one [One β] [DecidableEq β] (a : Nat) :
-    (1 : SparsePolynomial β)[a] = if a = 0 then 1 else 0 := sorry
+    (1 : SparsePolynomial β)[a] = if a = 0 then 1 else 0 := by
+  change (SparsePolynomial.mk _)[a] = _
+  grind
 
 instance [OfNat β n] [DecidableEq β] : OfNat (SparsePolynomial β) n where
   ofNat := ⟨.singleton 0 (OfNat.ofNat n) compare⟩
 
 @[grind =] theorem getElem_ofNat [OfNat β n] [DecidableEq β] (a : Nat) :
-    (OfNat.ofNat n : SparsePolynomial β)[a] = if a = 0 then OfNat.ofNat n else 0 := sorry
+    (OfNat.ofNat n : SparsePolynomial β)[a] = if a = 0 then OfNat.ofNat n else 0 := by
+  change (SparsePolynomial.mk _)[a] = _
+  grind
 
-protected def C [DecidableEq β] (b : β) : SparsePolynomial β where
+def C [DecidableEq β] (b : β) : SparsePolynomial β where
   coeffs := .singleton 0 b compare
 
 @[grind =] theorem getElem_C [DecidableEq β] (a : Nat) (b : β) :
-    (SparsePolynomial.C b : SparsePolynomial β)[a] = if a = 0 then b else 0 := sorry
+    (C b : SparsePolynomial β)[a] = if a = 0 then b else 0 := by
+  change (SparsePolynomial.mk _)[a] = _
+  grind
 
-protected def X [One β] [DecidableEq β] : SparsePolynomial β where
+def X [One β] [DecidableEq β] : SparsePolynomial β where
   coeffs := .singleton 1 1 compare
 
 @[grind =] theorem getElem_X [One β] [DecidableEq β] (a : Nat) :
-    (X : SparsePolynomial β)[a] = if a = 1 then 1 else 0 := sorry
+    (X : SparsePolynomial β)[a] = if a = 1 then 1 else 0 := by
+  grind [X]
 
 def degree (p : SparsePolynomial β) : Option Nat :=
   p.coeffs.foldr (fun a _ acc => max a acc) none
@@ -64,7 +77,9 @@ variable [Add β] [DecidableEq β]
 instance : Add (SparsePolynomial β) := ⟨fun ⟨m₁⟩ ⟨m₂⟩ => ⟨m₁ + m₂⟩⟩
 
 @[simp, grind =] theorem getElem_add (p₁ p₂ : SparsePolynomial β) (a : Nat) :
-    (p₁ + p₂)[a] = p₁[a] + p₂[a] := sorry
+    (p₁ + p₂)[a] = p₁[a] + p₂[a] := by
+  change (SparsePolynomial.mk _)[a] = _
+  grind
 
 theorem add_zero (h : ∀ x : β, x + 0 = x) (p : SparsePolynomial β) : p + 0 = p := by grind
 

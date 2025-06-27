@@ -15,8 +15,11 @@ instance : GetElem (FinMap α β cmp) α β (fun _ _ => True) where
 @[local grind] private theorem getElem_mk (m : TreeMapD α β cmp 0) (a : α) :
     (FinMap.mk m)[a] = m[a] := rfl
 
+@[local grind] private theorem getElem_values (m : FinMap α β cmp) (a : α) :
+    m.values[a] = m[a] := rfl
+
 @[ext, grind ext]
-theorem ext {p₁ p₂ : FinMap α β cmp} (h : ∀ a : α, p₁[a] = p₂[a]) : p₁ = p₂ := by
+theorem ext [LawfulEqCmp cmp] {p₁ p₂ : FinMap α β cmp} (h : ∀ a : α, p₁[a] = p₂[a]) : p₁ = p₂ := by
   cases p₁; cases p₂; congr
   ext
   apply h
@@ -56,11 +59,7 @@ section add
 variable [Add β]
 
 protected def add (p₁ p₂ : FinMap α β cmp) : FinMap α β cmp where
-  values := p₁.values.mergeWithAll p₂.values fun
-    | _, (some b₁), (some b₂) => b₁ + b₂
-    | _, none, (some b₂) => b₂
-    | _, (some b₁), none => b₁
-    | _, none, none => 0
+  values := p₁.values.mergeWithAll p₂.values fun _ b₁ b₂ => b₁ + b₂
 
 instance : Add (FinMap α β cmp) := ⟨FinMap.add⟩
 
