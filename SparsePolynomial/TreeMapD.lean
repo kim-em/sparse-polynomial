@@ -15,32 +15,35 @@ end Option
 An extensional tree map with a default value.
 
 To preserve extensionality, we require that the default value is not present in the tree.
+
+**Implementation note**: we use `Ord α` rather than a `cmp : α → α → Ordering` argument,
+because `grind` can not instantiate `ReflCmp` and `TransCmp` theorems because there is no constant to key on.
 -/
-structure TreeMapD (α : Type u) (β : Type v) (cmp : α → α → Ordering) [TransCmp cmp] (d : β) where
-  tree : ExtTreeMap α β cmp
+structure TreeMapD (α : Type u) [Ord α] [TransOrd α] (β : Type v) (d : β) where
+  tree : ExtTreeMap α β compare
   no_default : ∀ a : α, tree[a]? ≠ some d := by grind
 
 namespace TreeMapD
 
-variable {α : Type u} {β : Type v} {cmp : α → α → Ordering} [TransCmp cmp] {d : β}
+variable {α : Type u} [Ord α] [TransOrd α] {β : Type v} {d : β}
 
-instance : GetElem (TreeMapD α β cmp d) α β (fun _ _ => True) where
+instance : GetElem (TreeMapD α β d) α β (fun _ _ => True) where
   getElem := fun m a _ => m.tree[a]?.getD d
 
 @[local grind] private theorem getElem_mk
-    (tree : ExtTreeMap α β cmp) (no_default : ∀ a : α, tree[a]? ≠ some d) (a : α) :
+    (tree : ExtTreeMap α β compare) (no_default : ∀ a : α, tree[a]? ≠ some d) (a : α) :
     (TreeMapD.mk tree no_default)[a] = tree[a]?.getD d := rfl
 
-@[local grind] private theorem getElem?_tree [DecidableEq β] (m : TreeMapD α β cmp d) (a : α) :
+@[local grind] private theorem getElem?_tree [DecidableEq β] (m : TreeMapD α β d) (a : α) :
     m.tree[a]? = if m[a] = d then none else some m[a] := by
   grind [cases TreeMapD]
 
-@[local grind] private theorem mem_tree (m : TreeMapD α β cmp d) (a : α) :
+@[local grind] private theorem mem_tree (m : TreeMapD α β d) (a : α) :
     a ∈ m.tree ↔ m[a] ≠ d := by
   grind [cases TreeMapD]
 
 @[ext, grind ext]
-theorem ext [LawfulEqCmp cmp]  {m₁ m₂ : TreeMapD α β cmp d} (h : ∀ a : α, m₁[a] = m₂[a]) : m₁ = m₂ := by
+theorem ext [LawfulEqOrd α] {m₁ m₂ : TreeMapD α β d} (h : ∀ a : α, m₁[a] = m₂[a]) : m₁ = m₂ := by
   rcases m₁ with ⟨tree₁, no_default₁⟩
   rcases m₂ with ⟨tree₂, no_default₂⟩
   congr
@@ -48,45 +51,45 @@ theorem ext [LawfulEqCmp cmp]  {m₁ m₂ : TreeMapD α β cmp d} (h : ∀ a : �
   specialize h a
   grind
 
-def empty : TreeMapD α β cmp d where
-  tree := ExtTreeMap.empty
-  no_default := sorry -- by grind -- needs `grind` annotations on ExtTreeMap.
+def empty : TreeMapD α β d where
+  tree := ∅
 
-instance : EmptyCollection (TreeMapD α β cmp d) :=
+instance : EmptyCollection (TreeMapD α β d) :=
   ⟨empty⟩
 
-@[grind =] theorem empty_eq_emptyc : (empty : TreeMapD α β cmp d) = ∅ := rfl
+@[grind =] theorem empty_eq_emptyc : (empty : TreeMapD α β d) = ∅ := rfl
 
-instance : Inhabited (TreeMapD α β cmp d) :=
+instance : Inhabited (TreeMapD α β d) :=
   ⟨empty⟩
 
-@[grind =] theorem getElem_empty (a : α) : (∅ : TreeMapD α β cmp d)[a] = d := rfl
+@[grind =] theorem getElem_empty (a : α) : (∅ : TreeMapD α β d)[a] = d := rfl
 
 variable [DecidableEq β]
 
-def insert (m : TreeMapD α β cmp d) (a : α) (b : β) : TreeMapD α β cmp d where
+def insert (m : TreeMapD α β d) (a : α) (b : β) : TreeMapD α β d where
   tree := if b = d then m.tree.erase a else m.tree.insert a b
-  no_default := sorry
+  no_default := by
+    -- `grind` can't do this split because of the dependent typing in the `xs[i]?` notation.
+    split <;> grind
 
-@[grind =] theorem getElem_insert [DecidableEq α] (m : TreeMapD α β cmp d) (a : α) (b : β) :
+@[grind =] theorem getElem_insert [DecidableEq α] [LawfulEqOrd α] (m : TreeMapD α β d) (a : α) (b : β) :
     (m.insert a b)[k] = if k = a then b else m[k] := by
-  sorry
+  grind [insert]
 
-def erase (m : TreeMapD α β cmp d) (a : α) : TreeMapD α β cmp d where
+def erase (m : TreeMapD α β d) (a : α) : TreeMapD α β d where
   tree := m.tree.erase a
-  no_default := sorry
 
-def mergeWithAll (m₁ m₂ : TreeMapD α β cmp d) (f : α → β → β → β) : TreeMapD α β cmp d where
+def mergeWithAll (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) : TreeMapD α β d where
   tree := m₁.tree.mergeWithAll m₂.tree fun a b₁? b₂? => Option.guard (· ≠ d) (f a (b₁?.getD d) (b₂?.getD d))
   no_default := by grind
 
 @[grind =] theorem getElem_mergeWithAll
-    (m₁ m₂ : TreeMapD α β cmp d) (f : α → β → β → β) (w : ∀ a, f a d d = d) (a : α) :
+    (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) (w : ∀ a, f a d d = d) (a : α) :
     (m₁.mergeWithAll m₂ f)[a] = f a m₁[a] m₂[a] := by
   change (TreeMapD.mk _ _)[a] = _
   grind
 
-def foldr (m : TreeMapD α β cmp d) (f : α → β → δ → δ) (init : δ) : δ :=
+def foldr (m : TreeMapD α β d) (f : α → β → δ → δ) (init : δ) : δ :=
   m.tree.foldr (fun a b acc => f a b acc) init
 
 end TreeMapD

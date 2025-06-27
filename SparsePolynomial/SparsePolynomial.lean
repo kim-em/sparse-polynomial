@@ -1,7 +1,7 @@
 import SparsePolynomial.FinMap
 
 structure SparsePolynomial (β : Type v) [Zero β] where
-  private coeffs : FinMap Nat β compare
+  private coeffs : FinMap Nat β
 
 namespace SparsePolynomial
 
@@ -10,7 +10,7 @@ variable {β : Type v} [Zero β]
 instance : GetElem (SparsePolynomial β) Nat β (fun _ _ => True) where
   getElem := fun p a _ => p.coeffs[a]
 
-@[local grind] private theorem getElem_mk (coeffs : FinMap Nat β compare) (a : Nat) :
+@[local grind] private theorem getElem_mk (coeffs : FinMap Nat β) (a : Nat) :
     (SparsePolynomial.mk coeffs)[a] = coeffs[a] := rfl
 
 @[local grind] private theorem getElem_coeffs (p : SparsePolynomial β) (a : Nat) :
@@ -32,7 +32,7 @@ instance : Zero (SparsePolynomial β) := ⟨.zero⟩
 instance : Inhabited (SparsePolynomial β) := ⟨0⟩
 
 protected def one [One β] [DecidableEq β] : SparsePolynomial β where
-  coeffs := .singleton 0 1 compare
+  coeffs := .singleton 0 1
 
 instance instOne [One β] [DecidableEq β] : One (SparsePolynomial β) := ⟨.one⟩
 
@@ -42,7 +42,7 @@ instance instOne [One β] [DecidableEq β] : One (SparsePolynomial β) := ⟨.on
   grind
 
 instance [OfNat β n] [DecidableEq β] : OfNat (SparsePolynomial β) n where
-  ofNat := ⟨.singleton 0 (OfNat.ofNat n) compare⟩
+  ofNat := ⟨.singleton 0 (OfNat.ofNat n)⟩
 
 @[grind =] theorem getElem_ofNat [OfNat β n] [DecidableEq β] (a : Nat) :
     (OfNat.ofNat n : SparsePolynomial β)[a] = if a = 0 then OfNat.ofNat n else 0 := by
@@ -50,7 +50,7 @@ instance [OfNat β n] [DecidableEq β] : OfNat (SparsePolynomial β) n where
   grind
 
 def C [DecidableEq β] (b : β) : SparsePolynomial β where
-  coeffs := .singleton 0 b compare
+  coeffs := .singleton 0 b
 
 @[grind =] theorem getElem_C [DecidableEq β] (a : Nat) (b : β) :
     (C b : SparsePolynomial β)[a] = if a = 0 then b else 0 := by
@@ -58,7 +58,7 @@ def C [DecidableEq β] (b : β) : SparsePolynomial β where
   grind
 
 def X [One β] [DecidableEq β] : SparsePolynomial β where
-  coeffs := .singleton 1 1 compare
+  coeffs := .singleton 1 1
 
 @[grind =] theorem getElem_X [One β] [DecidableEq β] (a : Nat) :
     (X : SparsePolynomial β)[a] = if a = 1 then 1 else 0 := by
