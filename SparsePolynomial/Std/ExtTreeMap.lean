@@ -44,7 +44,7 @@ def mergeWithAll (m₁ m₂ : ExtTreeMap α β cmp) (f : α → Option β → Op
   sorry
 
 @[grind =] theorem getElem_mergeWithAll {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} {a : α} {h} :
-    (mergeWithAll m₁ m₂ f)[a] = (f a m₁[a]? m₂[a]?).get sorry :=
+    (mergeWithAll m₁ m₂ f)[a] = (f a m₁[a]? m₂[a]?).get (by grind) :=
   sorry
 
 end Std.ExtTreeMap

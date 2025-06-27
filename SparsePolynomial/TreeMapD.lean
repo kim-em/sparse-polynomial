@@ -81,7 +81,6 @@ def erase (m : TreeMapD α β d) (a : α) : TreeMapD α β d where
 
 def mergeWithAll (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) : TreeMapD α β d where
   tree := m₁.tree.mergeWithAll m₂.tree fun a b₁? b₂? => Option.guard (· ≠ d) (f a (b₁?.getD d) (b₂?.getD d))
-  no_default := by grind
 
 @[grind =] theorem getElem_mergeWithAll
     (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) (w : ∀ a, f a d d = d) (a : α) :
