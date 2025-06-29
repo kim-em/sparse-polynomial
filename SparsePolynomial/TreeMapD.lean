@@ -3,14 +3,6 @@ import SparsePolynomial.Std.ExtTreeMap
 
 open Std
 
-namespace Option
-
-@[grind =] theorem getD_guard : (guard p a).getD b = if p a then a else b := by
-  simp only [guard]
-  split <;> simp
-
-end Option
-
 /--
 An extensional tree map with a default value.
 
@@ -79,10 +71,10 @@ def insert (m : TreeMapD α β d) (a : α) (b : β) : TreeMapD α β d where
 def erase (m : TreeMapD α β d) (a : α) : TreeMapD α β d where
   tree := m.tree.erase a
 
-def mergeWithAll (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) : TreeMapD α β d where
+def mergeWithAll [LawfulEqOrd α] (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) : TreeMapD α β d where
   tree := m₁.tree.mergeWithAll m₂.tree fun a b₁? b₂? => Option.guard (· ≠ d) (f a (b₁?.getD d) (b₂?.getD d))
 
-@[grind =] theorem getElem_mergeWithAll
+@[grind =] theorem getElem_mergeWithAll [LawfulEqOrd α]
     (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) (w : ∀ a, f a d d = d) (a : α) :
     (m₁.mergeWithAll m₂ f)[a] = f a m₁[a] m₂[a] := by
   change (TreeMapD.mk _ _)[a] = _

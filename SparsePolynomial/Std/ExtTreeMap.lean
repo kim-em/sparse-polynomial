@@ -11,6 +11,31 @@ import SparsePolynomial.Std.TreeMap
 
 open Std
 
+namespace List
+
+theorem foldr_iff {xs : List α} {f : α → δ → δ} {init : δ} (p : δ → Prop)
+    (w : ∀ (a : α) (_ : a ∈ xs) (r : δ), p (f a r) ↔ p r) :
+    p (xs.foldr f init) ↔ p init := by
+  induction xs with grind
+
+theorem foldr_of_exists {xs : List α} {f : α → δ → δ} {init : δ} (p : δ → Prop)
+    (w : ∀ (a : α) (_ : a ∈ xs) (r : δ), p r → p (f a r))
+    (h : ∃ (a : α) (_ : a ∈ xs), ∀ (r : δ), p (f a r)) :
+    p (xs.foldr f init) := by
+  induction xs with
+  | nil => simp at h
+  | cons x xs ih =>
+    simp only [foldr_cons]
+    obtain ⟨a, h₁, h₂⟩ := h
+    simp only [mem_cons] at h₁
+    rcases h₁ with (rfl | h₂)
+    · apply h₂
+    · apply w
+      simp only [mem_cons, true_or]
+      apply ih <;> grind
+
+end List
+
 namespace Std.ExtTreeMap
 
 variable {α : Type u} {β : Type v} {cmp : α → α → Ordering} [TransCmp cmp]
@@ -41,12 +66,26 @@ def mergeWithAll (m₁ m₂ : ExtTreeMap α β cmp) (f : α → Option β → Op
 
 theorem foldr_iff {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
     (w : ∀ (a : α) (h : a ∈ m) (r : δ), p (f a m[a] r) ↔ p r) :
-    p (m.foldr f init) ↔ p init := sorry
+    p (m.foldr f init) ↔ p init := by
+  rw [foldr_eq_foldr_toList]
+  apply List.foldr_iff
+  rintro ⟨a, b⟩ h r
+  simp only [mem_toList_iff_getKey?_eq_some_and_getElem?_eq_some] at h
+  specialize w a (by grind) r
+  grind
 
-theorem foldr_of_exists {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
+theorem foldr_of_exists [LawfulEqCmp cmp] {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
     (w : ∀ (a : α) (h : a ∈ m) (r : δ), p r → p (f a m[a] r))
     (h : ∃ (a : α) (h : a ∈ m), ∀ (r : δ), p (f a m[a] r)) :
-    p (m.foldr f init) := sorry
+    p (m.foldr f init) := by
+  rw [foldr_eq_foldr_toList]
+  apply List.foldr_of_exists
+  · rintro ⟨a, b⟩ h r
+    simp only [mem_toList_iff_getKey?_eq_some_and_getElem?_eq_some] at h
+    specialize w a (by grind) r
+    grind
+  · obtain ⟨a, h₁, h₂⟩ := h
+    exact ⟨(a, m[a]), by simp, by grind⟩
 
 @[grind =] theorem mem_mergeWithAll [LawfulEqCmp cmp] {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} {a : α} :
     a ∈ mergeWithAll m₁ m₂ f ↔ (a ∈ m₁ ∨ a ∈ m₂) ∧ (f a m₁[a]? m₂[a]?).isSome := by
@@ -55,17 +94,7 @@ theorem foldr_of_exists {m : ExtTreeMap α β cmp} {f : α → β → δ → δ}
   · simp only [h₁, true_or, getElem?_pos, true_and]
     rw [foldr_iff (a ∈ ·)]
     · match h : f a (some m₁[a]) m₂[a]? with
-      | none =>
-        rw [foldr_iff (a ∈ ·)]
-        · grind
-        · -- This is annoying to automate because `grind` can't use `LawfulEqCmp.eq_of_compare` because it has no constants.
-          intro a' m r
-          split
-          · simp
-            intro w
-            have := LawfulEqCmp.eq_of_compare w
-            grind
-          · grind
+      | none => rw [foldr_iff (a ∈ ·)] <;> grind
       | some b =>
         simp only [Option.isSome_some, iff_true]
         apply foldr_of_exists (a ∈ ·)
@@ -75,41 +104,13 @@ theorem foldr_of_exists {m : ExtTreeMap α β cmp} {f : α → β → δ → δ}
           -- Annoying to automate because `grind` can't use `ReflCmp.compare_self`.
           have := ReflCmp.compare_self (cmp := cmp) (a := a)
           grind
-    · -- This is annoying to automate because `grind` can't use `LawfulEqCmp.eq_of_compare` because it has no constants.
-      intro a' m r
-      split
-      · grind
-      · split
-        · simp
-          intro w
-          have := LawfulEqCmp.eq_of_compare w
-          grind
-        · grind
+    · grind
   · by_cases h₂ : a ∈ m₂
     · simp [h₂]
       match h : f a m₁[a]? (some m₂[a]) with
       | none =>
         simp only [Option.isSome_none, Bool.false_eq_true, iff_false]
-        rw [foldr_iff (a ∉ ·)]
-        · rw [foldr_iff (a ∉ ·)]
-          · grind
-          · -- Again... `LawfulEqCmp.eq_of_compare`.
-            intro a' h₁ r
-            split
-            · simp only [mem_insert, not_or, and_iff_right_iff_imp]
-              intro p q
-              have := LawfulEqCmp.eq_of_compare q
-              grind
-            · grind
-        · intro a' h₁ r
-          split
-          · grind
-          · split
-            · simp only [mem_insert, not_or, and_iff_right_iff_imp]
-              intro p q
-              have := LawfulEqCmp.eq_of_compare q
-              grind
-            · grind
+        rw [foldr_iff (a ∉ ·), foldr_iff (a ∉ ·)] <;> grind
       | some b =>
         simp only [Option.isSome_some, iff_true]
         apply foldr_of_exists (a ∈ ·)
@@ -118,7 +119,8 @@ theorem foldr_of_exists {m : ExtTreeMap α β cmp} {f : α → β → δ → δ}
           split
           · grind
           · split <;> rename_i h₃ b? h₄
-            · have := ReflCmp.compare_self (cmp := cmp) (a := a)
+            · -- Annoying to automate because `grind` can't use `ReflCmp.compare_self`.
+              have := ReflCmp.compare_self (cmp := cmp) (a := a)
               grind
             · exfalso
               apply h₄
@@ -126,24 +128,7 @@ theorem foldr_of_exists {m : ExtTreeMap α β cmp} {f : α → β → δ → δ}
               rw [this] at h
               exact h
     · simp [h₁, h₂]
-      rw [foldr_iff (a ∈ ·), foldr_iff (a ∉ ·)]
-      · grind
-      · intro a' h₁ r
-        split
-        · simp
-          intro p q
-          have := LawfulEqCmp.eq_of_compare q
-          grind
-        · grind
-      · intro a' h₁ r
-        split
-        · grind
-        · split
-          · simp
-            intro p
-            have := LawfulEqCmp.eq_of_compare p
-            grind
-          · grind
+      rw [foldr_iff (a ∈ ·), foldr_iff (a ∉ ·)] <;> grind
 
 @[grind =] theorem mem_mergeWithAll' [Ord α] [TransOrd α] [LawfulEqOrd α] {m₁ m₂ : ExtTreeMap α β compare} {f : α → Option β → Option β → Option β} {a : α} :
     a ∈ mergeWithAll m₁ m₂ f ↔ (a ∈ m₁ ∨ a ∈ m₂) ∧ (f a m₁[a]? m₂[a]?).isSome := by
@@ -169,13 +154,44 @@ theorem foldr_of_exists {m : ExtTreeMap α β cmp} {f : α → β → δ → δ}
         · exact ⟨a, h₂, fun r => by grind⟩
     · rw [foldr_iff (a ∈ ·), foldr_iff (a ∈ ·)] <;> grind
 
-@[grind =] theorem getElem?_mergeWithAll {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} :
-    (mergeWithAll m₁ m₂ f)[a]? = if a ∈ m₁ ∨ a ∈ m₂ then f a m₁[a]? m₂[a]? else none :=
-  sorry
+@[grind =] theorem getElem?_mergeWithAll [Ord α] [TransOrd α] [LawfulEqOrd α] {m₁ m₂ : ExtTreeMap α β compare} {f : α → Option β → Option β → Option β} {a : α} :
+    (mergeWithAll m₁ m₂ f)[a]? = if a ∈ m₁ ∨ a ∈ m₂ then f a m₁[a]? m₂[a]? else none := by
+  unfold mergeWithAll
+  by_cases h₁ : a ∈ m₁
+  · simp only [h₁, true_or, ↓reduceIte, getElem?_pos]
+    rw [foldr_iff (·[a]? = f a (some m₁[a]) m₂[a]?)]
+    · match h : f a (some m₁[a]) m₂[a]? with
+      | none => rw [foldr_iff (·[a]? = none)] <;> grind
+      | some b =>
+        apply foldr_of_exists (·[a]? = some b)
+        · intro a' h₁ r h₂
+          split
+          · rw [getElem?_insert] -- TODO: why can't `grind` do this?
+            grind
+          · grind
+        · refine ⟨a, h₁, fun r => ?_⟩
+          split <;> rename_i h₁
+          · grind [compare_self, getElem_insert_self] -- TODO: annotate these?
+          · specialize h₁ b
+            grind
+    · grind
+  · by_cases h₂ : a ∈ m₂
+    · simp [h₂]
+      match h : f a m₁[a]? (some m₂[a]) with
+      | none =>
+        rw [foldr_iff (·[a]? = none), foldr_iff (·[a]? = none)] <;> grind
+      | some b =>
+        apply foldr_of_exists (·[a]? = some b)
+        · grind
+        · exact ⟨a, h₂, fun r => by grind⟩
+    · simp only [h₁, h₂, or_self, ↓reduceIte, getElem?_eq_none_iff]
+      rw [foldr_iff (a ∈ ·), foldr_iff (a ∈ ·)] <;> grind
 
-@[grind =] theorem getElem_mergeWithAll [LawfulEqCmp cmp]
-    {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} {a : α} {h} :
-    (mergeWithAll m₁ m₂ f)[a] = (f a m₁[a]? m₂[a]?).get (by grind) :=
-  sorry
+@[grind =] theorem getElem_mergeWithAll [Ord α] [TransOrd α] [LawfulEqOrd α]
+    {m₁ m₂ : ExtTreeMap α β compare} {f : α → Option β → Option β → Option β} {a : α} {h} :
+    (mergeWithAll m₁ m₂ f)[a] = (f a m₁[a]? m₂[a]?).get (by grind) := by
+  apply Option.some_inj.mp
+  rw [← getElem?_eq_some_getElem]
+  grind
 
 end Std.ExtTreeMap
