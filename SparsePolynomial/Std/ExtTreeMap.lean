@@ -40,6 +40,29 @@ namespace Std.ExtTreeMap
 
 variable {α : Type u} {β : Type v} {cmp : α → α → Ordering} [TransCmp cmp]
 
+theorem foldr_iff {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
+    (w : ∀ (a : α) (h : a ∈ m) (r : δ), p (f a m[a] r) ↔ p r) :
+    p (m.foldr f init) ↔ p init := by
+  rw [foldr_eq_foldr_toList]
+  apply List.foldr_iff
+  rintro ⟨a, b⟩ h r
+  simp only [mem_toList_iff_getKey?_eq_some_and_getElem?_eq_some] at h
+  specialize w a (by grind) r
+  grind
+
+theorem foldr_of_exists [LawfulEqCmp cmp] {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
+    (w : ∀ (a : α) (h : a ∈ m) (r : δ), p r → p (f a m[a] r))
+    (h : ∃ (a : α) (h : a ∈ m), ∀ (r : δ), p (f a m[a] r)) :
+    p (m.foldr f init) := by
+  rw [foldr_eq_foldr_toList]
+  apply List.foldr_of_exists
+  · rintro ⟨a, b⟩ h r
+    simp only [mem_toList_iff_getKey?_eq_some_and_getElem?_eq_some] at h
+    specialize w a (by grind) r
+    grind
+  · obtain ⟨a, h₁, h₂⟩ := h
+    exact ⟨(a, m[a]), by simp, by grind⟩
+
 /--
 Combines two extensional tree maps, using a function `f : α → Option β → Option β → Option β` to combine the values.
 
@@ -63,29 +86,6 @@ def mergeWithAll (m₁ m₂ : ExtTreeMap α β cmp) (f : α → Option β → Op
   --       if let some b := f a none (some b₂) then
   --         r := r.insert a b
   --   return r
-
-theorem foldr_iff {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
-    (w : ∀ (a : α) (h : a ∈ m) (r : δ), p (f a m[a] r) ↔ p r) :
-    p (m.foldr f init) ↔ p init := by
-  rw [foldr_eq_foldr_toList]
-  apply List.foldr_iff
-  rintro ⟨a, b⟩ h r
-  simp only [mem_toList_iff_getKey?_eq_some_and_getElem?_eq_some] at h
-  specialize w a (by grind) r
-  grind
-
-theorem foldr_of_exists [LawfulEqCmp cmp] {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
-    (w : ∀ (a : α) (h : a ∈ m) (r : δ), p r → p (f a m[a] r))
-    (h : ∃ (a : α) (h : a ∈ m), ∀ (r : δ), p (f a m[a] r)) :
-    p (m.foldr f init) := by
-  rw [foldr_eq_foldr_toList]
-  apply List.foldr_of_exists
-  · rintro ⟨a, b⟩ h r
-    simp only [mem_toList_iff_getKey?_eq_some_and_getElem?_eq_some] at h
-    specialize w a (by grind) r
-    grind
-  · obtain ⟨a, h₁, h₂⟩ := h
-    exact ⟨(a, m[a]), by simp, by grind⟩
 
 @[grind =] theorem mem_mergeWithAll [LawfulEqCmp cmp] {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} {a : α} :
     a ∈ mergeWithAll m₁ m₂ f ↔ (a ∈ m₁ ∨ a ∈ m₂) ∧ (f a m₁[a]? m₂[a]?).isSome := by
