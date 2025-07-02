@@ -3,5 +3,10 @@ version = "0.1.0"
 keywords = ["math"]
 defaultTargets = ["SparsePolynomial"]
 
+[[require]]
+scope = "leanprover"
+name = "doc-gen4"
+rev = "v4.22.0-rc2"
+
 [[lean_lib]]
 name = "SparsePolynomial"
