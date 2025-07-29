@@ -70,7 +70,8 @@ The function `f` is used to combine the values of the two tree maps.
 For each key present in either map, `f` is called with the key, and the values, if present, from both maps.
 If `f` returns `some b`, then `b` is inserted into the result.
 
-**Implementation note**: this is an inefficient implementation: a good implementation will be possible once we have iterators for maps.
+**Implementation note**: this is an inefficient implementation:
+a good implementation will be possible once we have iterators for maps.
 -/
 def mergeWithAll (m₁ m₂ : ExtTreeMap α β cmp) (f : α → Option β → Option β → Option β) : ExtTreeMap α β cmp :=
   m₂.foldr (fun a b₂ r => if a ∈ m₁ then r else if let some b := f a none (some b₂) then r.insert a b else r)
@@ -87,50 +88,8 @@ def mergeWithAll (m₁ m₂ : ExtTreeMap α β cmp) (f : α → Option β → Op
   --         r := r.insert a b
   --   return r
 
-@[grind =] theorem mem_mergeWithAll [LawfulEqCmp cmp] {m₁ m₂ : ExtTreeMap α β cmp} {f : α → Option β → Option β → Option β} {a : α} :
-    a ∈ mergeWithAll m₁ m₂ f ↔ (a ∈ m₁ ∨ a ∈ m₂) ∧ (f a m₁[a]? m₂[a]?).isSome := by
-  unfold mergeWithAll
-  by_cases h₁ : a ∈ m₁
-  · simp only [h₁, true_or, getElem?_pos, true_and]
-    rw [foldr_iff (a ∈ ·)]
-    · match h : f a (some m₁[a]) m₂[a]? with
-      | none => rw [foldr_iff (a ∈ ·)] <;> grind
-      | some b =>
-        simp only [Option.isSome_some, iff_true]
-        apply foldr_of_exists (a ∈ ·)
-        · grind
-        · refine ⟨a, h₁, fun r =>?_⟩
-          simp only [h, mem_insert]
-          -- Annoying to automate because `grind` can't use `ReflCmp.compare_self`.
-          have := ReflCmp.compare_self (cmp := cmp) (a := a)
-          grind
-    · grind
-  · by_cases h₂ : a ∈ m₂
-    · simp [h₂]
-      match h : f a m₁[a]? (some m₂[a]) with
-      | none =>
-        simp only [Option.isSome_none, Bool.false_eq_true, iff_false]
-        rw [foldr_iff (a ∉ ·), foldr_iff (a ∉ ·)] <;> grind
-      | some b =>
-        simp only [Option.isSome_some, iff_true]
-        apply foldr_of_exists (a ∈ ·)
-        · grind
-        · refine ⟨a, h₂, fun r => ?_⟩
-          split
-          · grind
-          · split <;> rename_i h₃ b? h₄
-            · -- Annoying to automate because `grind` can't use `ReflCmp.compare_self`.
-              have := ReflCmp.compare_self (cmp := cmp) (a := a)
-              grind
-            · exfalso
-              apply h₄
-              have : m₁[a]? = none := by grind
-              rw [this] at h
-              exact h
-    · simp [h₁, h₂]
-      rw [foldr_iff (a ∈ ·), foldr_iff (a ∉ ·)] <;> grind
-
-@[grind =] theorem mem_mergeWithAll' [Ord α] [TransOrd α] [LawfulEqOrd α] {m₁ m₂ : ExtTreeMap α β compare} {f : α → Option β → Option β → Option β} {a : α} :
+@[grind =] theorem mem_mergeWithAll [LawfulEqCmp cmp] {m₁ m₂ : ExtTreeMap α β cmp}
+    {f : α → Option β → Option β → Option β} {a : α} :
     a ∈ mergeWithAll m₁ m₂ f ↔ (a ∈ m₁ ∨ a ∈ m₂) ∧ (f a m₁[a]? m₂[a]?).isSome := by
   unfold mergeWithAll
   by_cases h₁ : a ∈ m₁
@@ -152,9 +111,11 @@ def mergeWithAll (m₁ m₂ : ExtTreeMap α β cmp) (f : α → Option β → Op
         apply foldr_of_exists (a ∈ ·)
         · grind
         · exact ⟨a, h₂, fun r => by grind⟩
-    · rw [foldr_iff (a ∈ ·), foldr_iff (a ∈ ·)] <;> grind
+    · simp [h₁, h₂]
+      rw [foldr_iff (a ∈ ·), foldr_iff (a ∈ ·)] <;> grind
 
-@[grind =] theorem getElem?_mergeWithAll [Ord α] [TransOrd α] [LawfulEqOrd α] {m₁ m₂ : ExtTreeMap α β compare} {f : α → Option β → Option β → Option β} {a : α} :
+@[grind =] theorem getElem?_mergeWithAll [LawfulEqCmp cmp] {m₁ m₂ : ExtTreeMap α β cmp}
+    {f : α → Option β → Option β → Option β} {a : α} :
     (mergeWithAll m₁ m₂ f)[a]? = if a ∈ m₁ ∨ a ∈ m₂ then f a m₁[a]? m₂[a]? else none := by
   unfold mergeWithAll
   by_cases h₁ : a ∈ m₁
@@ -187,8 +148,8 @@ def mergeWithAll (m₁ m₂ : ExtTreeMap α β cmp) (f : α → Option β → Op
     · simp only [h₁, h₂, or_self, ↓reduceIte, getElem?_eq_none_iff]
       rw [foldr_iff (a ∈ ·), foldr_iff (a ∈ ·)] <;> grind
 
-@[grind =] theorem getElem_mergeWithAll [Ord α] [TransOrd α] [LawfulEqOrd α]
-    {m₁ m₂ : ExtTreeMap α β compare} {f : α → Option β → Option β → Option β} {a : α} {h} :
+@[grind =] theorem getElem_mergeWithAll [LawfulEqCmp cmp] {m₁ m₂ : ExtTreeMap α β cmp}
+    {f : α → Option β → Option β → Option β} {a : α} {h} :
     (mergeWithAll m₁ m₂ f)[a] = (f a m₁[a]? m₂[a]?).get (by grind) := by
   apply Option.some_inj.mp
   rw [← getElem?_eq_some_getElem]
