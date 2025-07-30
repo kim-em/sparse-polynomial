@@ -13,11 +13,18 @@ open Std
 
 namespace List
 
+/-- If a predicate has the same value at each step of a fold,
+then it has the same value at the beginning and end. -/
 theorem foldr_iff {xs : List α} {f : α → δ → δ} {init : δ} (p : δ → Prop)
     (w : ∀ (a : α) (_ : a ∈ xs) (r : δ), p (f a r) ↔ p r) :
     p (xs.foldr f init) ↔ p init := by
   induction xs with grind
 
+/--
+If a predicate remains true at each step of a fold,
+and there is some step of the fold at which it becomes true,
+then the predicate is true at the end.
+-/
 theorem foldr_of_exists {xs : List α} {f : α → δ → δ} {init : δ} (p : δ → Prop)
     (w : ∀ (a : α) (_ : a ∈ xs) (r : δ), p r → p (f a r))
     (h : ∃ (a : α) (_ : a ∈ xs), ∀ (r : δ), p (f a r)) :
@@ -40,7 +47,10 @@ namespace Std.ExtTreeMap
 
 variable {α : Type u} {β : Type v} {cmp : α → α → Ordering} [TransCmp cmp]
 
-theorem foldr_iff {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
+/-- If a predicate has the same value at each step of a fold,
+then it has the same value at the beginning and end. -/
+theorem foldr_iff {m : ExtTreeMap α β cmp}
+    {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
     (w : ∀ (a : α) (h : a ∈ m) (r : δ), p (f a m[a] r) ↔ p r) :
     p (m.foldr f init) ↔ p init := by
   rw [foldr_eq_foldr_toList]
@@ -50,7 +60,11 @@ theorem foldr_iff {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init
   specialize w a (by grind) r
   grind
 
-theorem foldr_of_exists [LawfulEqCmp cmp] {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
+/-- If a predicate remains true at each step of a fold,
+and there is some step of the fold at which it becomes true,
+then the predicate is true at the end. -/
+theorem foldr_of_exists [LawfulEqCmp cmp] {m : ExtTreeMap α β cmp}
+    {f : α → β → δ → δ} {init : δ} (p : δ → Prop)
     (w : ∀ (a : α) (h : a ∈ m) (r : δ), p r → p (f a m[a] r))
     (h : ∃ (a : α) (h : a ∈ m), ∀ (r : δ), p (f a m[a] r)) :
     p (m.foldr f init) := by
