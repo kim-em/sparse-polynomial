@@ -76,19 +76,23 @@ variable [Add β] [DecidableEq β]
 
 instance : Add (SparsePolynomial β) := ⟨fun ⟨m₁⟩ ⟨m₂⟩ => ⟨m₁ + m₂⟩⟩
 
-@[simp, grind =] theorem getElem_add (p₁ p₂ : SparsePolynomial β) (a : Nat) :
+@[simp, grind =] theorem getElem_add (zero_add_zero : (0 : β) + 0 = 0) (p₁ p₂ : SparsePolynomial β) (a : Nat) :
     (p₁ + p₂)[a] = p₁[a] + p₂[a] := by
   change (SparsePolynomial.mk _)[a] = _
   grind
 
-theorem add_zero (h : ∀ x : β, x + 0 = x) (p : SparsePolynomial β) : p + 0 = p := by grind
+theorem add_zero (add_zero : ∀ x : β, x + 0 = x) (p : SparsePolynomial β) : p + 0 = p := by grind
 
-theorem zero_add (h : ∀ x : β, 0 + x = x) (p : SparsePolynomial β) : 0 + p = p := by grind
+theorem zero_add (zero_add : ∀ x : β, 0 + x = x) (p : SparsePolynomial β) : 0 + p = p := by grind
 
-theorem add_comm (h : ∀ x y : β, x + y = y + x) (p₁ p₂ : SparsePolynomial β) :
-    p₁ + p₂ = p₂ + p₁ := by grind
-theorem add_assoc (h : ∀ x y z : β, x + (y + z) = (x + y) + z) (p₁ p₂ p₃ : SparsePolynomial β) :
-    p₁ + (p₂ + p₃) = (p₁ + p₂) + p₃ := by grind
+theorem add_comm
+    (zero_add_zero : (0 : β) + 0 = 0)
+    (add_comm : ∀ x y : β, x + y = y + x)
+    (p₁ p₂ : SparsePolynomial β) : p₁ + p₂ = p₂ + p₁ := by grind
+theorem add_assoc
+    (zero_add_zero : (0 : β) + 0 = 0)
+    (add_assoc : ∀ x y z : β, x + (y + z) = (x + y) + z)
+    (p₁ p₂ p₃ : SparsePolynomial β) : p₁ + (p₂ + p₃) = (p₁ + p₂) + p₃ := by grind
 
 end add
 

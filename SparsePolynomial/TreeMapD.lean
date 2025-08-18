@@ -7,13 +7,10 @@ open Std
 An extensional tree map with a default value.
 
 To preserve extensionality, we require that the default value is not present in the tree.
-
-**Implementation note**: we use `Ord α` rather than a `cmp : α → α → Ordering` argument,
-because `grind` can not instantiate `ReflCmp` and `TransCmp` theorems because there is no constant to key on.
 -/
 structure TreeMapD (α : Type u) [Ord α] [TransOrd α] (β : Type v) (d : β) where
-  tree : ExtTreeMap α β compare
-  no_default : ∀ a : α, tree[a]? ≠ some d := by grind
+  private tree : ExtTreeMap α β compare
+  private no_default : ∀ a : α, tree[a]? ≠ some d := by grind
 
 namespace TreeMapD
 
@@ -22,15 +19,18 @@ variable {α : Type u} [Ord α] [TransOrd α] {β : Type v} {d : β}
 instance : GetElem (TreeMapD α β d) α β (fun _ _ => True) where
   getElem := fun m a _ => m.tree[a]?.getD d
 
-@[local grind] private theorem getElem_mk
+@[local simp, local grind]
+private theorem getElem_mk
     (tree : ExtTreeMap α β compare) (no_default : ∀ a : α, tree[a]? ≠ some d) (a : α) :
     (TreeMapD.mk tree no_default)[a] = tree[a]?.getD d := rfl
 
-@[local grind] private theorem getElem?_tree [DecidableEq β] (m : TreeMapD α β d) (a : α) :
+@[local simp, local grind]
+private theorem getElem?_tree [DecidableEq β] (m : TreeMapD α β d) (a : α) :
     m.tree[a]? = if m[a] = d then none else some m[a] := by
   grind [cases TreeMapD]
 
-@[local grind] private theorem mem_tree (m : TreeMapD α β d) (a : α) :
+@[local simp, local grind]
+private theorem mem_tree (m : TreeMapD α β d) (a : α) :
     a ∈ m.tree ↔ m[a] ≠ d := by
   grind [cases TreeMapD]
 
@@ -49,12 +49,14 @@ def empty : TreeMapD α β d where
 instance : EmptyCollection (TreeMapD α β d) :=
   ⟨empty⟩
 
-@[grind =] theorem empty_eq_emptyc : (empty : TreeMapD α β d) = ∅ := rfl
+@[simp, grind =] theorem empty_eq_emptyc : (empty : TreeMapD α β d) = ∅ := rfl
 
 instance : Inhabited (TreeMapD α β d) :=
   ⟨empty⟩
 
-@[grind =] theorem getElem_empty (a : α) : (∅ : TreeMapD α β d)[a] = d := rfl
+@[simp, grind =] theorem getElem_empty (a : α) : (∅ : TreeMapD α β d)[a] = d := rfl
+
+section
 
 variable [DecidableEq β]
 
@@ -68,19 +70,63 @@ def insert (m : TreeMapD α β d) (a : α) (b : β) : TreeMapD α β d where
     (m.insert a b)[k] = if k = a then b else m[k] := by
   grind [insert]
 
+@[simp]
+theorem getElem_insert_self [DecidableEq α] [LawfulEqOrd α] (m : TreeMapD α β d) (a : α) (b : β) :
+    (m.insert a b)[a] = b := by
+  grind
+
+@[simp]
+theorem getElem_insert_ne [DecidableEq α] [LawfulEqOrd α] (m : TreeMapD α β d) (a : α) (b : β) (k : α) (h : k ≠ a) :
+    (m.insert a b)[k] = m[k] := by
+  grind
+
 def erase (m : TreeMapD α β d) (a : α) : TreeMapD α β d where
   tree := m.tree.erase a
+
+@[grind =] theorem getElem_erase [DecidableEq α] [LawfulEqOrd α] (m : TreeMapD α β d) (a k : α) :
+    (m.erase a)[k] = if k = a then d else m[k] := by
+  grind [erase]
+
+@[simp]
+theorem getElem_erase_self [DecidableEq α] [LawfulEqOrd α] (m : TreeMapD α β d) (a : α) :
+    (m.erase a)[a] = d := by
+  grind
+
+@[simp]
+theorem getElem_erase_ne [DecidableEq α] [LawfulEqOrd α] (m : TreeMapD α β d) (a : α) (k : α) (h : k ≠ a) :
+    (m.erase a)[k] = m[k] := by
+  grind
 
 def mergeWithAll [LawfulEqOrd α] (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) : TreeMapD α β d where
   tree := m₁.tree.mergeWithAll m₂.tree fun a b₁? b₂? => Option.guard (· ≠ d) (f a (b₁?.getD d) (b₂?.getD d))
 
-@[grind =] theorem getElem_mergeWithAll [LawfulEqOrd α]
+@[simp, grind =] theorem getElem_mergeWithAll [LawfulEqOrd α]
     (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) (w : ∀ a, f a d d = d) (a : α) :
     (m₁.mergeWithAll m₂ f)[a] = f a m₁[a] m₂[a] := by
   change (TreeMapD.mk _ _)[a] = _
   grind
 
+end
+
+def toExtTreeMap (m : TreeMapD α β d) : ExtTreeMap α β compare := m.tree
+
+section toExtTreeMap
+
+@[simp, grind =]
+theorem mem_toExtTreeMap (m : TreeMapD α β d) (a : α) : a ∈ m.toExtTreeMap ↔ m[a] ≠ d := by
+  grind [toExtTreeMap]
+
+@[simp, grind =]
+theorem getElem_toExtTreeMap (m : TreeMapD α β d) (a : α) (h : a ∈ m.toExtTreeMap) : m.toExtTreeMap[a] = m[a] := by
+  sorry
+
+end toExtTreeMap
+
 def foldr (m : TreeMapD α β d) (f : α → β → δ → δ) (init : δ) : δ :=
   m.tree.foldr (fun a b acc => f a b acc) init
+
+@[simp, grind =]
+theorem foldr_toExtTreeMap (m : TreeMapD α β d) (f : α → β → δ → δ) (init : δ) :
+    m.toExtTreeMap.foldr f init = m.foldr f init := rfl
 
 end TreeMapD

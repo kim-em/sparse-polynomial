@@ -5,7 +5,6 @@ Authors: Kim Morrison
 -/
 
 import Std.Data.ExtTreeMap
-import SparsePolynomial.Std.TreeMap
 
 /-! # Std.ExtTreeMap.mergeWithAll -/
 
