@@ -6,6 +6,13 @@ Authors: Kim Morrison
 import Std.Data.ExtTreeMap
 import SparsePolynomial.Std.ExtTreeMap
 
+/-!
+# Extensional tree maps with a default value.
+
+This structure is intended as a building block for `FinMap`,
+and does not have a complete independent API.
+-/
+
 open Std
 
 /--
@@ -48,6 +55,7 @@ theorem ext [LawfulEqOrd α] {m₁ m₂ : TreeMapD α β d} (h : ∀ a : α, m�
   specialize h a
   grind
 
+/-- The underlying `ExtTreeMap`, forgetting that stored values are different from the default. -/
 def toExtTreeMap (m : TreeMapD α β d) : ExtTreeMap α β compare := m.tree
 
 section toExtTreeMap
@@ -65,6 +73,7 @@ theorem getElem_toExtTreeMap (m : TreeMapD α β d) (a : α) (h : a ∈ m.toExtT
 
 end toExtTreeMap
 
+/-- The empty tree map. -/
 def empty : TreeMapD α β d where
   tree := ∅
 
@@ -82,6 +91,10 @@ section
 
 variable [DecidableEq β]
 
+/--
+Insert a key-value pair in the tree map.
+If the value is the default value, this erases the key.
+-/
 def insert (m : TreeMapD α β d) (a : α) (b : β) : TreeMapD α β d where
   tree := if b = d then m.tree.erase a else m.tree.insert a b
   no_default := by
@@ -102,6 +115,9 @@ theorem getElem_insert_ne [DecidableEq α] [LawfulEqOrd α] (m : TreeMapD α β 
     (m.insert a b)[k] = m[k] := by
   grind
 
+/--
+Erase a key from the tree map.
+-/
 def erase (m : TreeMapD α β d) (a : α) : TreeMapD α β d where
   tree := m.tree.erase a
 
@@ -119,6 +135,10 @@ theorem getElem_erase_ne [DecidableEq α] [LawfulEqOrd α] (m : TreeMapD α β d
     (m.erase a)[k] = m[k] := by
   grind
 
+/--
+Merge two tree maps, applying a function to the values of keys that appear in either maps,
+using the default value for keys that appear in only one map.
+-/
 def mergeWithAll [LawfulEqOrd α] (m₁ m₂ : TreeMapD α β d) (f : α → β → β → β) : TreeMapD α β d where
   tree := m₁.tree.mergeWithAll m₂.tree fun a b₁? b₂? => Option.guard (· ≠ d) (f a (b₁?.getD d) (b₂?.getD d))
 
@@ -150,6 +170,9 @@ end map
 
 section foldr
 
+/--
+Fold over the key-value pairs in the tree map.
+-/
 def foldr (m : TreeMapD α β d) (f : α → β → δ → δ) (init : δ) : δ :=
   m.tree.foldr (fun a b acc => f a b acc) init
 

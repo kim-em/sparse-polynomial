@@ -12,11 +12,7 @@ structure FinMap (α : Type u) [Ord α] [TransOrd α] (β : Type v) [Zero β] wh
 
 namespace FinMap
 
-variable {α : Type u} [Ord α] [TransOrd α] {β : Type v}
-
-section
-
-variable [Zero β]
+variable {α : Type u} [Ord α] [TransOrd α] {β : Type v} [Zero β]
 
 instance : GetElem (FinMap α β) α β (fun _ _ => True) where
   getElem := fun m a _ => m.values[a]
@@ -52,9 +48,11 @@ instance : Inhabited (FinMap α β) :=
 
 end empty
 
+variable [DecidableEq β]
+
 section single
 
-variable [DecidableEq β] [LawfulEqOrd α]
+variable [LawfulEqOrd α]
 
 /-- The single `FinMap` containing a single key-value pair. -/
 protected def single (a : α) (b : β) : FinMap α β where
@@ -76,8 +74,6 @@ theorem getElem_single_ne [DecidableEq α] (a : α) (b : β) (c : α) (h : c ≠
 end single
 
 section update
-
-variable [DecidableEq β]
 
 /-- Update the value of a key in a `FinMap`. -/
 def update (m : FinMap α β) (a : α) (b : β) : FinMap α β where
@@ -102,6 +98,55 @@ theorem getElem_update_ne (m : FinMap α β) (a : α) (b : β) (c : α) (h : c �
 
 end update
 
-end
+attribute [grind =] List.findRev?_eq_find?_reverse -- missing the library
+
+section updateMany
+
+/-- Update the values of a list of keys in a `FinMap`. -/
+def updateMany (m : FinMap α β) (l : List (α × β)) : FinMap α β :=
+  l.foldl (fun m (a, b) => m.update a b) m
+
+@[simp, grind =]
+theorem updateMany_nil (m : FinMap α β) :
+    m.updateMany [] = m := by
+  simp [updateMany]
+
+@[simp, grind =]
+theorem updateMany_cons (m : FinMap α β) (p : α × β) (l : List (α × β)) :
+    m.updateMany (p :: l) = (m.update p.1 p.2).updateMany l := by
+  simp [updateMany]
+
+@[simp, grind =]
+theorem updateMany_append (m : FinMap α β) (l₁ l₂ : List (α × β)) :
+    m.updateMany (l₁ ++ l₂) = (m.updateMany l₁).updateMany l₂ := by
+  simp [updateMany]
+
+variable [DecidableEq α] [LawfulEqOrd α]
+
+@[simp, grind =]
+theorem getElem_updateMany {m : FinMap α β} {l : List (α × β)} (a : α) :
+    (m.updateMany l)[a] = ((l.findRev? (·.1 = a)).map (·.2)).getD m[a] := by
+  induction l generalizing m with grind
+
+end updateMany
+
+section ofList
+
+/--
+Construct a `FinMap` from a list of key-value pairs.
+
+When there are duplicate keys, the last value is used.
+-/
+def ofList (l : List (α × β)) : FinMap α β := (∅ : FinMap α β).updateMany l
+
+variable [DecidableEq α] [LawfulEqOrd α]
+
+@[simp, grind =]
+theorem getElem_ofList {l : List (α × β)} (a : α) :
+    (ofList l)[a] = ((l.findRev? (·.1 = a)).map (·.2)).getD 0 := by
+  grind [ofList]
+
+
+end ofList
 
 end FinMap

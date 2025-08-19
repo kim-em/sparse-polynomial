@@ -22,6 +22,8 @@ variable [LawfulEqOrd α]
 theorem mem_support (m : FinMap α β) (a : α) : a ∈ m.support ↔ m[a] ≠ 0 := by
   grind [support]
 
+theorem nodup_support {m : FinMap α β} : m.support.Nodup := sorry
+
 end support
 
 section toList
@@ -32,12 +34,43 @@ def toList (m : FinMap α β) : List (α × β) := m.values.toExtTreeMap.toList
 variable [LawfulEqOrd α]
 
 @[simp, grind =]
-theorem toList_eq_map_support (m : FinMap α β) : m.toList = m.support.map fun a => (a, m[a]) := by
+theorem toList_eq_map_support (m : FinMap α β) :
+    m.toList = m.support.map fun a => (a, m[a]) := by
   rw [toList, support]
   rw [ExtTreeMap.toList_eq_keys_attach_map]
   simp
 
+variable [DecidableEq β]
+
+theorem ofList_toList {m : FinMap α β} : ofList m.toList = m := sorry
+
 end toList
+
+section
+
+variable [DecidableEq β]
+
+def chooseKey? (m : FinMap α β) : Option α := sorry
+
+theorem chooseKey?_mem_support (m : FinMap α β) (h : m.chooseKey?.isSome) : m.chooseKey?.get h ∈ m.support := sorry
+theorem chooseKey?_eq_none_iff (m : FinMap α β) : m.chooseKey? = none ↔ m = ∅ := sorry
+
+def asUpdate? (m : FinMap α β) : Option { t : FinMap α β × α × β // t.1[t.2.1] = 0 ∧ m = t.1.update t.2.1 t.2.2 } := sorry
+theorem asUpdate?_eq_none_iff (m : FinMap α β) : m.asUpdate? = none ↔ m = ∅ := sorry
+
+def recursion {C : FinMap α β → Sort _}
+    (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
+    (m : FinMap α β) : C m :=
+  match m.asUpdate? with
+  | none =>
+    sorry
+  | some ⟨⟨m', a⟩, ⟨h₁, h₂⟩⟩ => by
+    subst h₂
+    apply update
+    exact h₁
+    sorry
+
+end
 
 section foldr
 

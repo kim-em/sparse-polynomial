@@ -2,6 +2,10 @@ name = "sparse-polynomial"
 version = "0.1.0"
 keywords = ["math"]
 defaultTargets = ["SparsePolynomial"]
+testRunner = "FinMapTest"
 
 [[lean_lib]]
 name = "SparsePolynomial"
+
+[[lean_lib]]
+name = "FinMapTest"
