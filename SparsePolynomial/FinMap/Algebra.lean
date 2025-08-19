@@ -73,15 +73,14 @@ instance : Neg (FinMap α β) := ⟨FinMap.neg⟩
 private theorem neg_def (p : FinMap α β) : -p = { values := p.values.map 0 (fun _ b => -b) } := rfl
 
 @[simp, grind =]
-theorem getElem_neg (p : FinMap α β) (a : α) : (-p)[a] = -p[a] := by
-  rw [neg_def]
-  sorry
+theorem getElem_neg (neg_zero : -(0 : β) = 0) (p : FinMap α β) (a : α) : (-p)[a] = -p[a] := by
+  grind [neg_def]
 
 theorem neg_add_cancel [Add β] [LawfulEqOrd α]
+    (neg_zero : -(0 : β) = 0)
     (zero_add_zero : (0 : β) + 0 = 0)
-    (neg_add_cancel : ∀ x y : β, -x + x = 0)
-    (p : FinMap α β) : -p + p = 0 := by
-  sorry
+    (neg_add_cancel : ∀ x : β, -x + x = 0)
+    (p : FinMap α β) : -p + p = 0 := by grind
 
 end neg
 
@@ -99,16 +98,19 @@ private theorem sub_def (p₁ p₂ : FinMap α β) :
     p₁ - p₂ = { values := p₁.values.mergeWithAll p₂.values fun _ b₁ b₂ => b₁ - b₂ } := rfl
 
 @[simp, grind =]
-theorem getElem_sub (p₁ p₂ : FinMap α β) (a : α) : (p₁ - p₂)[a] = p₁[a] - p₂[a] := by
+theorem getElem_sub (zero_sub_zero : (0 : β) - 0 = 0)
+    (p₁ p₂ : FinMap α β) (a : α) : (p₁ - p₂)[a] = p₁[a] - p₂[a] := by
   rw [sub_def]
-  sorry
+  grind
 
-variable [Add β] [Neg β] [LawfulEqOrd α]
+variable [Add β] [Neg β]
 
 theorem sub_eq_add_neg
+    (zero_sub_zero : (0 : β) - 0 = 0)
+    (neg_zero : -(0 : β) = 0)
     (sub_eq_add_neg : ∀ x y : β, x - y = x + -y)
     (p₁ p₂ : FinMap α β) : p₁ - p₂ = p₁ + -p₂ := by
-  sorry
+  grind
 
 end sub
 

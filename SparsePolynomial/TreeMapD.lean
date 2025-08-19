@@ -140,10 +140,11 @@ removing all default values from the results.
 -/
 def map (m : TreeMapD α β d) (d' : γ) (f : α → β → γ) : TreeMapD α γ d' where
   tree := m.tree.filterMap (fun a b => Option.guard (· ≠ d') (f a b))
-  no_default := by
-    intro a
-    simp
-    sorry
+
+@[grind =]
+theorem getElem_map [DecidableEq β] {m : TreeMapD α β d} {d' : γ} {f : α → β → γ} {a : α} :
+    (m.map d' f)[a] = if m[a] = d then d' else f a m[a] := by
+  grind [map]
 
 end map
 

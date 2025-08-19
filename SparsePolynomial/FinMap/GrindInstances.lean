@@ -14,11 +14,11 @@ variable {α : Type u} [Ord α] [TransOrd α] {β : Type v}
 
 variable [DecidableEq β] [LawfulEqOrd α]
 
+attribute [local simp] AddCommMonoid.add_zero
+
 section AddCommMonoid
 
 variable [AddCommMonoid β]
-
-attribute [local simp] AddCommMonoid.add_zero
 
 instance [AddRightCancel β] : AddRightCancel (FinMap α β) where
   add_right_cancel x y z w := by
@@ -39,8 +39,11 @@ section AddCommGroup
 variable [AddCommGroup β]
 
 instance : AddCommGroup (FinMap α β) where
-  neg_add_cancel x := by sorry
-  sub_eq_add_neg x y := by sorry
+  neg_add_cancel x :=
+    neg_add_cancel AddCommGroup.neg_zero (by simp) AddCommGroup.neg_add_cancel x
+  sub_eq_add_neg x y :=
+    sub_eq_add_neg (by rw [AddCommGroup.sub_eq_add_neg, AddCommGroup.neg_zero, AddCommMonoid.add_zero])
+      AddCommGroup.neg_zero AddCommGroup.sub_eq_add_neg x y
 
 end AddCommGroup
 
