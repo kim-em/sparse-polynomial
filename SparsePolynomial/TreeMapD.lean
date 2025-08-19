@@ -55,6 +55,57 @@ theorem ext [LawfulEqOrd α] {m₁ m₂ : TreeMapD α β d} (h : ∀ a : α, m�
   specialize h a
   grind
 
+/-- The empty tree map. -/
+def empty : TreeMapD α β d where
+  tree := ∅
+
+instance : EmptyCollection (TreeMapD α β d) :=
+  ⟨empty⟩
+
+@[simp, grind =] theorem empty_eq_emptyc : (empty : TreeMapD α β d) = ∅ := rfl
+
+instance : Inhabited (TreeMapD α β d) :=
+  ⟨empty⟩
+
+@[simp, grind =] theorem getElem_empty (a : α) : (∅ : TreeMapD α β d)[a] = d := rfl
+
+@[simp]
+theorem mk_eq_empty_iff [LawfulEqOrd α] [DecidableEq β] (tree : ExtTreeMap α β compare) (no_default : ∀ a : α, tree[a]? ≠ some d) :
+    TreeMapD.mk tree no_default = ∅ ↔ tree = ∅ := by
+  constructor
+  · intro h
+    ext a b
+    replace h := congrArg (·[a]?) h
+    simp at h
+    sorry
+  · intro h
+    ext a
+    replace h := congrArg (·[a]?) h
+    simp_all
+
+/-- All the keys with non-default values in the tree map. -/
+def keys (m : TreeMapD α β d): List α := m.tree.keys
+
+section keys
+
+@[simp, grind =]
+theorem keys_empty : (∅ : TreeMapD α β d).keys = [] := rfl
+
+@[simp, grind =]
+theorem keys_mk (tree : ExtTreeMap α β compare) (no_default : ∀ a : α, tree[a]? ≠ some d) :
+    (TreeMapD.mk tree no_default).keys = tree.keys := rfl
+
+@[simp, grind =]
+theorem keys_tree (m : TreeMapD α β d) : m.tree.keys = m.keys := rfl
+
+@[simp]
+theorem keys_eq_nil_iff [LawfulEqOrd α] [DecidableEq β] (m : TreeMapD α β d) :
+    m.keys = [] ↔ m = ∅ := by
+  rcases m with ⟨m⟩
+  simp
+
+end keys
+
 /-- The underlying `ExtTreeMap`, forgetting that stored values are different from the default. -/
 def toExtTreeMap (m : TreeMapD α β d) : ExtTreeMap α β compare := m.tree
 
@@ -71,21 +122,31 @@ theorem getElem_toExtTreeMap (m : TreeMapD α β d) (a : α) (h : a ∈ m.toExtT
   simp [toExtTreeMap] at h ⊢
   grind
 
+@[simp, grind =]
+theorem getElem?_toExtTreeMap [DecidableEq β] (m : TreeMapD α β d) (a : α) :
+    m.toExtTreeMap[a]? = if m[a] = d then none else some m[a] := by
+  rcases m with ⟨m⟩
+  grind
+
+@[simp, grind =]
+theorem keys_toExtTreeMap [LawfulEqOrd α] [DecidableEq β] (m : TreeMapD α β d) :
+    m.toExtTreeMap.keys = m.keys := by
+  rfl
+
+variable [LawfulEqOrd α] [DecidableEq β]
+
+@[simp]
+theorem toExtTreeMap_eq_empty (m : TreeMapD α β d) : m.toExtTreeMap = ∅ ↔ m = ∅ := by
+  constructor
+  · intro h
+    ext i
+    replace h := congrArg (·[i]?) h
+    grind
+  · intro h
+    ext i
+    simp [h]
+
 end toExtTreeMap
-
-/-- The empty tree map. -/
-def empty : TreeMapD α β d where
-  tree := ∅
-
-instance : EmptyCollection (TreeMapD α β d) :=
-  ⟨empty⟩
-
-@[simp, grind =] theorem empty_eq_emptyc : (empty : TreeMapD α β d) = ∅ := rfl
-
-instance : Inhabited (TreeMapD α β d) :=
-  ⟨empty⟩
-
-@[simp, grind =] theorem getElem_empty (a : α) : (∅ : TreeMapD α β d)[a] = d := rfl
 
 section
 

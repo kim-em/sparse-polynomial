@@ -80,6 +80,36 @@ theorem foldr_eq_foldr_attach_keys {m : TreeMap α β cmp} {f : α → β → δ
   rw [foldr_eq_foldr_toList, toList_eq_keys_attach_map]
   simp [List.foldr_map]
 
+theorem nodup_keys {m : TreeMap α β cmp} : m.keys.Nodup := by
+  have := m.distinct_keys
+  grind
+
+@[simp, grind =]
+theorem keys_erase {m : TreeMap α β cmp} {a : α} :
+    (m.erase a).keys = m.keys.eraseP (cmp · a == .eq) := by
+  sorry
+
+private def recursion_aux {C : TreeMap α β cmp → Sort _}
+    (empty : C ∅) (update : (m : TreeMap α β cmp) → (a : α) → (b : β) → a ∉ m → C m → C (m.insert a b))
+    (m : TreeMap α β cmp) : (l : List α) → m.keys = l → C m
+  | List.nil, h => by
+    have : m = ∅ := by sorry -- simpa using h
+    subst this
+    exact empty
+  | List.cons a as, h => by
+    have : m = (m.erase a).insert a (m[a]'sorry) := by
+      sorry
+    rw [this]
+    apply update
+    · simp
+    · exact recursion_aux empty update _ as (by sorry) -- grind
+
+/-- Construct a function (or predicate) on `TreeMap` by recurison on the `insert` operation. -/
+def recursion {C : TreeMap α β cmp → Sort _}
+    (empty : C ∅) (update : (m : TreeMap α β cmp) → (a : α) → (b : β) → a ∉ m → C m → C (m.insert a b))
+    (m : TreeMap α β cmp) : C m :=
+  recursion_aux empty update m _ rfl
+
 end Std.TreeMap
 
 namespace Std.ExtTreeMap
@@ -283,5 +313,37 @@ theorem getElem_filterMap {m : ExtTreeMap α β cmp} {f : α → β → Option �
   rw [getElem?_def]
   rw [dif_pos (mem_of_mem_filterMap h)]
   simp
+
+theorem nodup_keys {m : ExtTreeMap α β cmp} : m.keys.Nodup := by
+  have := m.distinct_keys
+  grind
+
+@[simp, grind =]
+theorem keys_erase {m : ExtTreeMap α β cmp} {a : α} :
+    (m.erase a).keys = m.keys.eraseP (cmp · a == .eq) := by
+  sorry
+
+private def recursion_aux [LawfulEqCmp cmp] {C : ExtTreeMap α β cmp → Sort _}
+    (empty : C ∅) (update : (m : ExtTreeMap α β cmp) → (a : α) → (b : β) → a ∉ m → C m → C (m.insert a b))
+    (m : ExtTreeMap α β cmp) : (l : List α) → m.keys = l → C m
+  | List.nil, h => by
+    have : m = ∅ := by simpa using h
+    subst this
+    exact empty
+  | List.cons a as, h => by
+    have h' : a ∈ m.keys := by grind
+    have : m = (m.erase a).insert a (m[a]'(by grind)) := by
+      ext k b
+      grind
+    rw [this]
+    apply update
+    · simp
+    · exact recursion_aux empty update _ as (by grind)
+
+/-- Construct a function (or predicate) on `ExtTreeMap` by recurison on the `insert` operation. -/
+def recursion [LawfulEqCmp cmp] {C : ExtTreeMap α β cmp → Sort _}
+    (empty : C ∅) (update : (m : ExtTreeMap α β cmp) → (a : α) → (b : β) → a ∉ m → C m → C (m.insert a b))
+    (m : ExtTreeMap α β cmp) : C m :=
+  recursion_aux empty update m _ rfl
 
 end Std.ExtTreeMap

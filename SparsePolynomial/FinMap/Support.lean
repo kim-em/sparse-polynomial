@@ -16,6 +16,9 @@ section support
 /-- The list of keys with non-zero values in a `FinMap`. -/
 def support (m : FinMap α β) : List α := m.values.toExtTreeMap.keys
 
+theorem nodup_support {m : FinMap α β} : m.support.Nodup := by
+  simpa [support] using ExtTreeMap.nodup_keys
+
 variable [LawfulEqOrd α]
 
 @[simp, grind =]
@@ -23,22 +26,20 @@ theorem mem_support (m : FinMap α β) (a : α) : a ∈ m.support ↔ m[a] ≠ 0
   grind [support]
 
 @[simp]
-theorem support_eq_nil_iff (m : FinMap α β) : m.support = [] ↔ m = ∅ := by
+theorem support_eq_nil_iff [DecidableEq β] (m : FinMap α β) : m.support = [] ↔ m = ∅ := by
+  simp [support]
   sorry
 
-theorem nodup_support {m : FinMap α β} : m.support.Nodup := sorry
+variable [DecidableEq β]
 
-variable [BEq α] [DecidableEq β]
+-- We don't yet state a theorem about `(m.update a b).support` in general.
+-- It would require either stating in terms of `List.Perm`,
+-- or using a `List.orderedInsert` which doesn't yet exist.
 
-@[grind =]
-theorem support_update {m : FinMap α β} {a : α} {b : β} :
-    (m.update a b).support = if b = 0 then m.support.erase a else a :: m.support :=
-  -- This is false, we need to either use a permutation, or orderedInsert
-  sorry
-
-@[simp]
+@[simp, grind =]
 theorem support_update_zero {m : FinMap α β} {a : α} :
-    (m.update a 0).support = m.support.erase a := sorry
+    (m.update a 0).support = m.support.eraseP (compare · a == .eq) := by
+  simp [support, update, TreeMapD.insert]
 
 end support
 
@@ -65,7 +66,6 @@ end toList
 section
 
 variable [DecidableEq β]
-
 variable [DecidableEq α] [LawfulEqOrd α] -- Doesn't DecidableEq follow from LawfulEqOrd?
 
 private def recursion_aux {C : FinMap α β → Sort _}
@@ -82,6 +82,7 @@ private def recursion_aux {C : FinMap α β → Sort _}
     · simp
     · exact recursion_aux empty update _ as (by grind)
 
+/-- Construct a function (or predicate) on `FinMap` by recurison on the `update` operation. -/
 def recursion {C : FinMap α β → Sort _}
     (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
     (m : FinMap α β) : C m :=
