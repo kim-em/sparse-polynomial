@@ -22,7 +22,23 @@ variable [LawfulEqOrd α]
 theorem mem_support (m : FinMap α β) (a : α) : a ∈ m.support ↔ m[a] ≠ 0 := by
   grind [support]
 
+@[simp]
+theorem support_eq_nil_iff (m : FinMap α β) : m.support = [] ↔ m = ∅ := by
+  sorry
+
 theorem nodup_support {m : FinMap α β} : m.support.Nodup := sorry
+
+variable [BEq α] [DecidableEq β]
+
+@[grind =]
+theorem support_update {m : FinMap α β} {a : α} {b : β} :
+    (m.update a b).support = if b = 0 then m.support.erase a else a :: m.support :=
+  -- This is false, we need to either use a permutation, or orderedInsert
+  sorry
+
+@[simp]
+theorem support_update_zero {m : FinMap α β} {a : α} :
+    (m.update a 0).support = m.support.erase a := sorry
 
 end support
 
@@ -50,25 +66,26 @@ section
 
 variable [DecidableEq β]
 
-def chooseKey? (m : FinMap α β) : Option α := sorry
+variable [DecidableEq α] [LawfulEqOrd α] -- Doesn't DecidableEq follow from LawfulEqOrd?
 
-theorem chooseKey?_mem_support (m : FinMap α β) (h : m.chooseKey?.isSome) : m.chooseKey?.get h ∈ m.support := sorry
-theorem chooseKey?_eq_none_iff (m : FinMap α β) : m.chooseKey? = none ↔ m = ∅ := sorry
-
-def asUpdate? (m : FinMap α β) : Option { t : FinMap α β × α × β // t.1[t.2.1] = 0 ∧ m = t.1.update t.2.1 t.2.2 } := sorry
-theorem asUpdate?_eq_none_iff (m : FinMap α β) : m.asUpdate? = none ↔ m = ∅ := sorry
+private def recursion_aux {C : FinMap α β → Sort _}
+    (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
+    (m : FinMap α β) : (l : List α) → m.support = l → C m
+  | List.nil, h => by
+    have : m = ∅ := by simpa using h
+    subst this
+    exact empty
+  | List.cons a as, h => by
+    have : m = (m.update a 0).update a m[a] := by grind
+    rw [this]
+    apply update
+    · simp
+    · exact recursion_aux empty update _ as (by grind)
 
 def recursion {C : FinMap α β → Sort _}
     (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
     (m : FinMap α β) : C m :=
-  match m.asUpdate? with
-  | none =>
-    sorry
-  | some ⟨⟨m', a⟩, ⟨h₁, h₂⟩⟩ => by
-    subst h₂
-    apply update
-    exact h₁
-    sorry
+  recursion_aux empty update m _ rfl
 
 end
 
