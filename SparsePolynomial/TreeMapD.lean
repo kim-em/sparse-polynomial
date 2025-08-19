@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Lean FRO, LLC. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Kim Morrison
+-/
 import Std.Data.ExtTreeMap
 import SparsePolynomial.Std.ExtTreeMap
 
@@ -19,17 +24,17 @@ variable {α : Type u} [Ord α] [TransOrd α] {β : Type v} {d : β}
 instance : GetElem (TreeMapD α β d) α β (fun _ _ => True) where
   getElem := fun m a _ => m.tree[a]?.getD d
 
-@[local simp, local grind]
+@[local simp, local grind =]
 private theorem getElem_mk
     (tree : ExtTreeMap α β compare) (no_default : ∀ a : α, tree[a]? ≠ some d) (a : α) :
     (TreeMapD.mk tree no_default)[a] = tree[a]?.getD d := rfl
 
-@[local simp, local grind]
+@[local simp, local grind =]
 private theorem getElem?_tree [DecidableEq β] (m : TreeMapD α β d) (a : α) :
     m.tree[a]? = if m[a] = d then none else some m[a] := by
   grind [cases TreeMapD]
 
-@[local simp, local grind]
+@[local simp, local grind =]
 private theorem mem_tree (m : TreeMapD α β d) (a : α) :
     a ∈ m.tree ↔ m[a] ≠ d := by
   grind [cases TreeMapD]
@@ -42,6 +47,23 @@ theorem ext [LawfulEqOrd α] {m₁ m₂ : TreeMapD α β d} (h : ∀ a : α, m�
   ext a b
   specialize h a
   grind
+
+def toExtTreeMap (m : TreeMapD α β d) : ExtTreeMap α β compare := m.tree
+
+section toExtTreeMap
+
+@[simp, grind =]
+theorem mem_toExtTreeMap (m : TreeMapD α β d) (a : α) : a ∈ m.toExtTreeMap ↔ m[a] ≠ d := by
+  grind [toExtTreeMap]
+
+@[simp, grind =]
+theorem getElem_toExtTreeMap (m : TreeMapD α β d) (a : α) (h : a ∈ m.toExtTreeMap) :
+    m.toExtTreeMap[a] = m[a] := by
+  rcases m with ⟨m⟩
+  simp [toExtTreeMap] at h ⊢
+  grind
+
+end toExtTreeMap
 
 def empty : TreeMapD α β d where
   tree := ∅
@@ -108,19 +130,24 @@ def mergeWithAll [LawfulEqOrd α] (m₁ m₂ : TreeMapD α β d) (f : α → β 
 
 end
 
-def toExtTreeMap (m : TreeMapD α β d) : ExtTreeMap α β compare := m.tree
+section map
 
-section toExtTreeMap
+variable [DecidableEq γ]
 
-@[simp, grind =]
-theorem mem_toExtTreeMap (m : TreeMapD α β d) (a : α) : a ∈ m.toExtTreeMap ↔ m[a] ≠ d := by
-  grind [toExtTreeMap]
+/--
+Apply a function to all non-default values in a `TreeMapD`,
+removing all default values from the results.
+-/
+def map (m : TreeMapD α β d) (d' : γ) (f : α → β → γ) : TreeMapD α γ d' where
+  tree := m.tree.filterMap (fun a b => Option.guard (· ≠ d') (f a b))
+  no_default := by
+    intro a
+    simp
+    sorry
 
-@[simp, grind =]
-theorem getElem_toExtTreeMap (m : TreeMapD α β d) (a : α) (h : a ∈ m.toExtTreeMap) : m.toExtTreeMap[a] = m[a] := by
-  sorry
+end map
 
-end toExtTreeMap
+section foldr
 
 def foldr (m : TreeMapD α β d) (f : α → β → δ → δ) (init : δ) : δ :=
   m.tree.foldr (fun a b acc => f a b acc) init
@@ -128,5 +155,7 @@ def foldr (m : TreeMapD α β d) (f : α → β → δ → δ) (init : δ) : δ 
 @[simp, grind =]
 theorem foldr_toExtTreeMap (m : TreeMapD α β d) (f : α → β → δ → δ) (init : δ) :
     m.toExtTreeMap.foldr f init = m.foldr f init := rfl
+
+end foldr
 
 end TreeMapD

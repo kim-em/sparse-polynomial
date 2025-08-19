@@ -3,7 +3,7 @@ Copyright (c) 2025 Lean FRO, LLC. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison
 -/
-
+import Std.Data.TreeMap
 import Std.Data.ExtTreeMap
 
 /-! # Std.ExtTreeMap.mergeWithAll -/
@@ -41,6 +41,46 @@ theorem foldr_of_exists {xs : List α} {f : α → δ → δ} {init : δ} (p : �
       apply ih <;> grind
 
 end List
+
+namespace Std.TreeMap
+
+variable {α : Type u} {β : Type v} {cmp : α → α → Ordering} [TransCmp cmp]
+
+@[simp, grind =]
+theorem fst_getElem_toList {m : TreeMap α β cmp} {i} {h : i < m.toList.length} :
+    (m.toList)[i].1 = m.keys[i]'(by simpa using h) := by
+  have := map_fst_toList_eq_keys (t := m)
+  rw [← List.getElem_map Prod.fst]
+  · simp [map_fst_toList_eq_keys]
+  · simp_all
+
+variable [LawfulEqCmp cmp]
+
+@[simp, grind =]
+theorem snd_getElem_toList {m : TreeMap α β cmp} {i} {h : i < m.toList.length} :
+    (m.toList)[i].2 =
+      m[m.keys[i]'(by simpa using h)]'(by
+        simpa only [TreeMap.mem_keys] using List.getElem_mem (l := m.keys) (n := i) (h := by simpa using h)) := by
+  have := mem_toList_iff_getKey?_eq_some_and_getElem?_eq_some (t := m) (k := m.toList[i].1) (v := m.toList[i].2)
+  rw [Prod.eta] at this
+  simp only [List.getElem_mem, true_iff] at this
+  apply Option.some_inj.mp
+  rw [← this.2]
+  simp
+
+theorem toList_eq_keys_attach_map {m : TreeMap α β cmp} :
+    m.toList = m.keys.attach.map fun ⟨a, h⟩ => (a, m[a]'(by simpa using h)) := by
+  apply List.ext_getElem
+  · simp
+  · intro i h₁ h₂
+    ext <;> simp
+
+theorem foldr_eq_foldr_attach_keys {m : TreeMap α β cmp} {f : α → β → δ → δ} {init : δ} :
+    m.foldr f init = m.keys.attach.foldr (fun ⟨a, h⟩ r => f a (m[a]'(by simpa using h)) r) init := by
+  rw [foldr_eq_foldr_toList, toList_eq_keys_attach_map]
+  simp [List.foldr_map]
+
+end Std.TreeMap
 
 namespace Std.ExtTreeMap
 
@@ -167,5 +207,53 @@ def mergeWithAll (m₁ m₂ : ExtTreeMap α β cmp) (f : α → Option β → Op
   apply Option.some_inj.mp
   rw [← getElem?_eq_some_getElem]
   grind
+
+/-
+TODO: I would prefer to prove the next three theorems in terms of the corresponding lemma for `TreeMap`,
+but we don't have the machinery for this yet.
+
+We would need something like:
+```
+def ofTreeMap (m : TreeMap α β cmp) : ExtTreeMap α β cmp := sorry
+
+theorem ind {P : ExtTreeMap α β cmp → Prop} (h : ∀ m : TreeMap α β cmp, P (ofTreeMap m))
+    (m : ExtTreeMap α β cmp) : P m := by
+  sorry
+```
+-/
+
+@[simp, grind =]
+theorem fst_getElem_toList {m : ExtTreeMap α β cmp} {i} {h : i < m.toList.length} :
+    (m.toList)[i].1 = m.keys[i]'(by simpa using h) := by
+  have := map_fst_toList_eq_keys (t := m)
+  rw [← List.getElem_map Prod.fst]
+  · simp [map_fst_toList_eq_keys]
+  · simp_all
+
+variable [LawfulEqCmp cmp]
+
+@[simp, grind =]
+theorem snd_getElem_toList {m : ExtTreeMap α β cmp} {i} {h : i < m.toList.length} :
+    (m.toList)[i].2 =
+      m[m.keys[i]'(by simpa using h)]'(by
+        simpa only [ExtTreeMap.mem_keys] using List.getElem_mem (l := m.keys) (n := i) (h := by simpa using h)) := by
+  have := mem_toList_iff_getKey?_eq_some_and_getElem?_eq_some (t := m) (k := m.toList[i].1) (v := m.toList[i].2)
+  rw [Prod.eta] at this
+  simp only [List.getElem_mem, true_iff] at this
+  apply Option.some_inj.mp
+  rw [← this.2]
+  simp
+
+theorem toList_eq_keys_attach_map {m : ExtTreeMap α β cmp} :
+    m.toList = m.keys.attach.map fun ⟨a, h⟩ => (a, m[a]'(by simpa using h)) := by
+  apply List.ext_getElem
+  · simp
+  · intro i h₁ h₂
+    ext <;> simp
+
+theorem foldr_eq_foldr_attach_keys {m : ExtTreeMap α β cmp} {f : α → β → δ → δ} {init : δ} :
+    m.foldr f init = m.keys.attach.foldr (fun ⟨a, h⟩ r => f a (m[a]'(by simpa using h)) r) init := by
+  rw [foldr_eq_foldr_toList, toList_eq_keys_attach_map]
+  simp [List.foldr_map]
 
 end Std.ExtTreeMap
