@@ -39,6 +39,6 @@ def h : FinMap Nat Int := Id.run do
     m := m.update i i
   return m
 
-/-- info: 99999 -/
+/-- info: 199998 -/
 #guard_msgs in
-#eval h[100000 - 1]
+#eval (h + h)[100000 - 1]

@@ -8,3 +8,4 @@ name = "FinMap"
 
 [[lean_lib]]
 name = "FinMapTest"
+globs = ["FinMapTest.+"]

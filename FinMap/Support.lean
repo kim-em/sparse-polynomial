@@ -70,7 +70,7 @@ section
 
 variable [DecidableEq β]
 
-variable [DecidableEq α] [LawfulEqOrd α] -- Doesn't DecidableEq follow from LawfulEqOrd?
+variable [DecidableEq α] [LawfulEqOrd α]
 
 private def recursion_aux {C : FinMap α β → Sort _}
     (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
@@ -86,6 +86,7 @@ private def recursion_aux {C : FinMap α β → Sort _}
     · simp
     · exact recursion_aux empty update _ as (by grind)
 
+/-- Construct a value (or prove a predicate) for a `FinMap` by recursively adding new key value pairs. -/
 def recursion {C : FinMap α β → Sort _}
     (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
     (m : FinMap α β) : C m :=
