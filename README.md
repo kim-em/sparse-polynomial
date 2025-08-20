@@ -1,2 +1,2 @@
-# lean-polynomial
+# lean-finap
 

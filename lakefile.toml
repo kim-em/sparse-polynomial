@@ -1,8 +1,10 @@
-name = "sparse-polynomial"
+name = "lean-finmap"
 version = "0.1.0"
-keywords = ["math"]
-defaultTargets = ["SparsePolynomial"]
+defaultTargets = ["FinMap", "SparsePolynomial"]
 testRunner = "FinMapTest"
+
+[[lean_lib]]
+name = "FinMap"
 
 [[lean_lib]]
 name = "SparsePolynomial"

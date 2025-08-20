@@ -1,4 +1,4 @@
-import SparsePolynomial.FinMap
+import FinMap
 
 def x : FinMap Nat Int := ∅
 def y : FinMap Nat Int := x.update 1 2
