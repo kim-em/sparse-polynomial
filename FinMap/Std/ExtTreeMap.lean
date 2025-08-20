@@ -54,6 +54,8 @@ theorem fst_getElem_toList {m : TreeMap α β cmp} {i} {h : i < m.toList.length}
   · simp [map_fst_toList_eq_keys]
   · simp_all
 
+section
+
 variable [LawfulEqCmp cmp]
 
 @[simp, grind =]
@@ -79,6 +81,11 @@ theorem foldr_eq_foldr_attach_keys {m : TreeMap α β cmp} {f : α → β → δ
     m.foldr f init = m.keys.attach.foldr (fun ⟨a, h⟩ r => f a (m[a]'(by simpa using h)) r) init := by
   rw [foldr_eq_foldr_toList, toList_eq_keys_attach_map]
   simp [List.foldr_map]
+
+theorem nodup_keys {m : ExtTreeMap α β cmp} : m.keys.Nodup := by
+  simpa using m.distinct_keys
+
+end
 
 end Std.TreeMap
 
@@ -257,6 +264,9 @@ theorem foldr_eq_foldr_attach_keys {m : ExtTreeMap α β cmp} {f : α → β →
     m.foldr f init = m.keys.attach.foldr (fun ⟨a, h⟩ r => f a (m[a]'(by simpa using h)) r) init := by
   rw [foldr_eq_foldr_toList, toList_eq_keys_attach_map]
   simp [List.foldr_map]
+
+theorem nodup_keys {m : ExtTreeMap α β cmp} : m.keys.Nodup := by
+  simpa using m.distinct_keys
 
 end
 

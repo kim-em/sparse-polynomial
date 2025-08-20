@@ -24,21 +24,12 @@ theorem mem_support (m : FinMap α β) (a : α) : a ∈ m.support ↔ m[a] ≠ 0
 
 @[simp]
 theorem support_eq_nil_iff (m : FinMap α β) : m.support = [] ↔ m = ∅ := by
-  sorry
+  rw [support]
+  simp
 
-theorem nodup_support {m : FinMap α β} : m.support.Nodup := sorry
-
-variable [BEq α] [DecidableEq β]
-
-@[grind =]
-theorem support_update {m : FinMap α β} {a : α} {b : β} :
-    (m.update a b).support = if b = 0 then m.support.erase a else a :: m.support :=
-  -- This is false, we need to either use a permutation, or orderedInsert
-  sorry
-
-@[simp]
-theorem support_update_zero {m : FinMap α β} {a : α} :
-    (m.update a 0).support = m.support.erase a := sorry
+theorem nodup_support {m : FinMap α β} : m.support.Nodup := by
+  rw [support]
+  exact ExtTreeMap.nodup_keys
 
 end support
 
@@ -56,9 +47,22 @@ theorem toList_eq_map_support (m : FinMap α β) :
   rw [ExtTreeMap.toList_eq_keys_attach_map]
   simp
 
-variable [DecidableEq β]
+variable [DecidableEq α] [DecidableEq β]
 
-theorem ofList_toList {m : FinMap α β} : ofList m.toList = m := sorry
+theorem ofList_toList {m : FinMap α β} : ofList m.toList = m := by
+  ext a
+  simp only [toList_eq_map_support, getElem_ofList, List.findRev?_eq_find?_reverse]
+  by_cases h : m[a] = 0
+  · rw [List.find?_eq_none.mpr ?_] <;> grind
+  · rw [(List.find?_eq_some_iff_append (b := (a, m[a]))).mpr ?_]
+    · grind
+    · have := m.nodup_support
+      have h₁ : a ∈ m.support := by grind
+      obtain ⟨as, bs, h₂, h₃⟩ := List.eq_append_cons_of_mem h₁
+      -- TODO: why do we need these rewrites? Why can't grind see them?
+      rw [h₂, List.map_append, List.map_cons, List.reverse_append,
+        List.reverse_cons, List.append_assoc, List.cons_append]
+      grind
 
 end toList
 
@@ -70,7 +74,7 @@ variable [DecidableEq α] [LawfulEqOrd α] -- Doesn't DecidableEq follow from La
 
 private def recursion_aux {C : FinMap α β → Sort _}
     (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
-    (m : FinMap α β) : (l : List α) → m.support = l → C m
+    (m : FinMap α β) : (l : List α) → m.support ⊆ l → C m
   | List.nil, h => by
     have : m = ∅ := by simpa using h
     subst this
@@ -85,7 +89,7 @@ private def recursion_aux {C : FinMap α β → Sort _}
 def recursion {C : FinMap α β → Sort _}
     (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
     (m : FinMap α β) : C m :=
-  recursion_aux empty update m _ rfl
+  recursion_aux empty update m _ (List.Subset.refl _)
 
 end
 

@@ -46,6 +46,14 @@ instance : Inhabited (FinMap α β) :=
 
 @[simp, grind =] theorem getElem_empty (a : α) : (∅ : FinMap α β)[a] = 0 := rfl
 
+@[simp] theorem values_eq_empty_iff [LawfulEqOrd α] (m : FinMap α β) :
+    m.values = ∅ ↔ m = ∅ := by
+  constructor <;>
+  · intro h
+    ext a
+    replace h := congrArg (·[a]) h
+    simp_all
+
 end empty
 
 variable [DecidableEq β]

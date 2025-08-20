@@ -73,6 +73,8 @@ theorem getElem_toExtTreeMap (m : TreeMapD α β d) (a : α) (h : a ∈ m.toExtT
 
 end toExtTreeMap
 
+section empty
+
 /-- The empty tree map. -/
 def empty : TreeMapD α β d where
   tree := ∅
@@ -86,6 +88,22 @@ instance : Inhabited (TreeMapD α β d) :=
   ⟨empty⟩
 
 @[simp, grind =] theorem getElem_empty (a : α) : (∅ : TreeMapD α β d)[a] = d := rfl
+
+
+@[simp] theorem toExtTreeMap_eq_empty_iff [LawfulEqOrd α] (m : TreeMapD α β d) :
+    m.toExtTreeMap = ∅ ↔ m = ∅ := by
+  rw [toExtTreeMap]
+  constructor
+  · intro h
+    ext i
+    replace h := congrArg (·[i]?) h
+    simp_all
+  · intro h
+    ext a b
+    replace h := congrArg (·[a]) h
+    simp_all
+
+end empty
 
 section
 
