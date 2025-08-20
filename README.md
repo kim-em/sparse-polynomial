@@ -8,9 +8,9 @@ A Lean 4 library providing efficient finite maps with algebraic operations, buil
 
 ## Features
 
-- **Sparse Storage**: Only non-zero values are stored in memory
-- **Algebraic Operations**: Support for addition, subtraction, negation, and scalar multiplication
-- **Efficient Access**: O(log n) lookup and update operations
+- **Sparse Storage**: Only non-zero values are stored in memory.
+- **Algebraic Operations**: Support for pointwise algebraic operations, currently onl additive operations.
+- **Efficient Access**: O(log n) lookup and update operations.
 
 ## Basic Usage
 

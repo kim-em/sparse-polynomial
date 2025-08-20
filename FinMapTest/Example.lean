@@ -42,3 +42,9 @@ def h : FinMap Nat Int := Id.run do
 /-- info: 199998 -/
 #guard_msgs in
 #eval (h + h)[100000 - 1]
+
+def f1 : FinMap Nat Int := .single 1 2
+def f2 : FinMap Nat Int := FinMap.empty.update 1 1 + FinMap.empty.update 1 1
+
+example : f1 = f2 := rfl
+example : f1 = f2 := by decide

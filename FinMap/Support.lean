@@ -33,6 +33,9 @@ theorem nodup_support {m : FinMap α β} : m.support.Nodup := by
 
 end support
 
+instance [LawfulEqOrd α] [DecidableEq β] : DecidableEq (FinMap α β) :=
+  fun p₁ p₂ => decidable_of_iff (∀ a, a ∈ p₁.support ++ p₂.support → p₁[a] = p₂[a]) (by grind)
+
 section toList
 
 /-- Convert a `FinMap` to a list of key-value pairs, returning only the keys with non-zero values. -/
