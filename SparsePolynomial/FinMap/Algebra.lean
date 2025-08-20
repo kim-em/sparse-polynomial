@@ -63,7 +63,7 @@ end add
 
 section neg
 
-variable [DecidableEq β] [Neg β]
+variable [LawfulEqOrd α] [DecidableEq β] [Neg β]
 
 protected def neg (p : FinMap α β) : FinMap α β where
   values := p.values.map 0 (fun _ b => -b)
@@ -76,7 +76,7 @@ private theorem neg_def (p : FinMap α β) : -p = { values := p.values.map 0 (fu
 theorem getElem_neg (neg_zero : -(0 : β) = 0) (p : FinMap α β) (a : α) : (-p)[a] = -p[a] := by
   grind [neg_def]
 
-theorem neg_add_cancel [Add β] [LawfulEqOrd α]
+theorem neg_add_cancel [Add β]
     (neg_zero : -(0 : β) = 0)
     (zero_add_zero : (0 : β) + 0 = 0)
     (neg_add_cancel : ∀ x : β, -x + x = 0)

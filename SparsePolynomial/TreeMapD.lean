@@ -152,7 +152,7 @@ end
 
 section map
 
-variable [DecidableEq γ]
+variable [DecidableEq γ] [LawfulEqOrd α]
 
 /--
 Apply a function to all non-default values in a `TreeMapD`,

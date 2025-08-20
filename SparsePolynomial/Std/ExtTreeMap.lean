@@ -260,28 +260,4 @@ theorem foldr_eq_foldr_attach_keys {m : ExtTreeMap α β cmp} {f : α → β →
 
 end
 
-@[simp, grind =]
-theorem getElem?_filterMap {m : ExtTreeMap α β cmp} {f : α → β → Option γ} {a : α} :
-    (m.filterMap f)[a]? = m[a]?.bind fun b => f a b := by
-  sorry
-
-theorem mem_filterMap {m : ExtTreeMap α β cmp} {f : α → β → Option γ} {a : α} :
-    a ∈ m.filterMap f ↔ ∃ (h : a ∈ m), (f a m[a]).isSome  := by
-  sorry
-
-theorem mem_of_mem_filterMap {m : ExtTreeMap α β cmp} {f : α → β → Option γ} {a : α}
-    (h : a ∈ m.filterMap f) : a ∈ m :=
-  (mem_filterMap.mp h).1
-
-theorem getElem_filterMap {m : ExtTreeMap α β cmp} {f : α → β → Option γ} {a : α} {h} :
-    (m.filterMap f)[a] = (f a (m[a]'(mem_of_mem_filterMap h))).get (mem_filterMap.mp h).2 := by
-  have := getElem?_filterMap (m := m) (f := f) (a := a)
-  rw [getElem?_def] at this
-  rw [dif_pos h] at this
-  apply Option.some_inj.mp
-  rw [this]
-  rw [getElem?_def]
-  rw [dif_pos (mem_of_mem_filterMap h)]
-  simp
-
 end Std.ExtTreeMap
