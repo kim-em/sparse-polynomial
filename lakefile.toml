@@ -1,13 +1,10 @@
 name = "lean-finmap"
 version = "0.1.0"
-defaultTargets = ["FinMap", "SparsePolynomial"]
+defaultTargets = ["FinMap"]
 testRunner = "FinMapTest"
 
 [[lean_lib]]
 name = "FinMap"
-
-[[lean_lib]]
-name = "SparsePolynomial"
 
 [[lean_lib]]
 name = "FinMapTest"
