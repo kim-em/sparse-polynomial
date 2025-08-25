@@ -1,3 +1,0 @@
-import SparsePolynomial.Std.ExtTreeMap
-import SparsePolynomial.TreeMapD
-import SparsePolynomial.SparsePolynomial

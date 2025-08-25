@@ -1,0 +1,3 @@
+-- This file only exists to satisfy `lake`,
+-- which insists that a file exists in the root directory with the same name as each library,
+-- even when the lakefile definition specifies a glob.

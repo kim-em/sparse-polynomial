@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison
 -/
 import Std.Data.ExtTreeMap
-import SparsePolynomial.Std.ExtTreeMap
+import FinMap.Std.ExtTreeMap
 
 /-!
 # Extensional tree maps with a default value.
@@ -77,7 +77,7 @@ theorem mk_eq_empty_iff [LawfulEqOrd α] [DecidableEq β] (tree : ExtTreeMap α 
     ext a b
     replace h := congrArg (·[a]?) h
     simp at h
-    sorry
+    grind
   · intro h
     ext a
     replace h := congrArg (·[a]?) h
@@ -213,7 +213,7 @@ end
 
 section map
 
-variable [DecidableEq γ]
+variable [DecidableEq γ] [LawfulEqOrd α]
 
 /--
 Apply a function to all non-default values in a `TreeMapD`,

@@ -3,7 +3,7 @@ Copyright (c) 2025 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison
 -/
-import SparsePolynomial.TreeMapD
+import FinMap.TreeMapD
 
 open Std
 
@@ -46,14 +46,13 @@ instance : Inhabited (FinMap α β) :=
 
 @[simp, grind =] theorem getElem_empty (a : α) : (∅ : FinMap α β)[a] = 0 := rfl
 
-@[simp]
-theorem values_eq_empty_iff [LawfulEqOrd α] (m : FinMap α β) : m.values = ∅ ↔ m = ∅ := by
-  constructor
+@[simp] theorem values_eq_empty_iff [LawfulEqOrd α] (m : FinMap α β) :
+    m.values = ∅ ↔ m = ∅ := by
+  constructor <;>
   · intro h
     ext a
-    replace h := congrArg (·[a]?) h
+    replace h := congrArg (·[a]) h
     simp_all
-  · grind
 
 end empty
 

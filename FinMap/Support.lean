@@ -3,7 +3,7 @@ Copyright (c) 2025 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison
 -/
-import SparsePolynomial.FinMap.Basic
+import FinMap.Basic
 
 open Std
 
@@ -16,10 +16,10 @@ section support
 /-- The list of keys with non-zero values in a `FinMap`. -/
 def support (m : FinMap α β) : List α := m.values.toExtTreeMap.keys
 
+variable [LawfulEqOrd α]
+
 theorem nodup_support {m : FinMap α β} : m.support.Nodup := by
   simpa [support] using ExtTreeMap.nodup_keys
-
-variable [LawfulEqOrd α]
 
 @[simp, grind =]
 theorem mem_support (m : FinMap α β) (a : α) : a ∈ m.support ↔ m[a] ≠ 0 := by
@@ -28,7 +28,6 @@ theorem mem_support (m : FinMap α β) (a : α) : a ∈ m.support ↔ m[a] ≠ 0
 @[simp]
 theorem support_eq_nil_iff [DecidableEq β] (m : FinMap α β) : m.support = [] ↔ m = ∅ := by
   simp [support]
-  sorry
 
 variable [DecidableEq β]
 
@@ -36,12 +35,10 @@ variable [DecidableEq β]
 -- It would require either stating in terms of `List.Perm`,
 -- or using a `List.orderedInsert` which doesn't yet exist.
 
-@[simp, grind =]
-theorem support_update_zero {m : FinMap α β} {a : α} :
-    (m.update a 0).support = m.support.eraseP (compare · a == .eq) := by
-  simp [support, update, TreeMapD.insert]
-
 end support
+
+instance [LawfulEqOrd α] [DecidableEq β] : DecidableEq (FinMap α β) :=
+  fun p₁ p₂ => decidable_of_iff (∀ a, a ∈ p₁.support ++ p₂.support → p₁[a] = p₂[a]) (by grind)
 
 section toList
 
@@ -57,9 +54,22 @@ theorem toList_eq_map_support (m : FinMap α β) :
   rw [ExtTreeMap.toList_eq_keys_attach_map]
   simp
 
-variable [DecidableEq β]
+variable [DecidableEq α] [DecidableEq β]
 
-theorem ofList_toList {m : FinMap α β} : ofList m.toList = m := sorry
+theorem ofList_toList {m : FinMap α β} : ofList m.toList = m := by
+  ext a
+  simp only [toList_eq_map_support, getElem_ofList, List.findRev?_eq_find?_reverse]
+  by_cases h : m[a] = 0
+  · rw [List.find?_eq_none.mpr ?_] <;> grind
+  · rw [(List.find?_eq_some_iff_append (b := (a, m[a]))).mpr ?_]
+    · grind
+    · have := m.nodup_support
+      have h₁ : a ∈ m.support := by grind
+      obtain ⟨as, bs, h₂, h₃⟩ := List.eq_append_cons_of_mem h₁
+      -- TODO: why do we need these rewrites? Why can't grind see them?
+      rw [h₂, List.map_append, List.map_cons, List.reverse_append,
+        List.reverse_cons, List.append_assoc, List.cons_append]
+      grind
 
 end toList
 
@@ -70,7 +80,7 @@ variable [DecidableEq α] [LawfulEqOrd α] -- Doesn't DecidableEq follow from La
 
 private def recursion_aux {C : FinMap α β → Sort _}
     (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
-    (m : FinMap α β) : (l : List α) → m.support = l → C m
+    (m : FinMap α β) : (l : List α) → m.support ⊆ l → C m
   | List.nil, h => by
     have : m = ∅ := by simpa using h
     subst this
@@ -82,11 +92,11 @@ private def recursion_aux {C : FinMap α β → Sort _}
     · simp
     · exact recursion_aux empty update _ as (by grind)
 
-/-- Construct a function (or predicate) on `FinMap` by recurison on the `update` operation. -/
+/-- Construct a value (or prove a predicate) for a `FinMap` by recursively adding new key value pairs. -/
 def recursion {C : FinMap α β → Sort _}
     (empty : C ∅) (update : (m : FinMap α β) → (a : α) → (b : β) → m[a] = 0 → C m → C (m.update a b))
     (m : FinMap α β) : C m :=
-  recursion_aux empty update m _ rfl
+  recursion_aux empty update m _ (List.Subset.refl _)
 
 end
 
