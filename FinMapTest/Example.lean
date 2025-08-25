@@ -48,3 +48,4 @@ def f2 : FinMap Nat Int := FinMap.empty.update 1 1 + FinMap.empty.update 1 1
 
 example : f1 = f2 := rfl
 example : f1 = f2 := by decide
+example : f1 == f2 := by decide

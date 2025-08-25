@@ -6,7 +6,7 @@ Authors: Kim Morrison
 import Std.Data.TreeMap
 import Std.Data.ExtTreeMap
 
-/-! # Std.ExtTreeMap.mergeWithAll -/
+/-! # Material on `Std.ExtTreeMap` that could be moved upstream to the core library. -/
 
 open Std
 
