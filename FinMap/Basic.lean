@@ -17,11 +17,11 @@ variable {α : Type u} [Ord α] [TransOrd α] {β : Type v} [Zero β]
 instance : GetElem (FinMap α β) α β (fun _ _ => True) where
   getElem := fun m a _ => m.values[a]
 
-@[grind, simp]
+@[grind =, simp]
 theorem getElem_mk (m : TreeMapD α β 0) (a : α) :
     (FinMap.mk m)[a] = m[a] := rfl
 
-@[grind, simp]
+@[grind =, simp]
 theorem getElem_values (m : FinMap α β) (a : α) :
     m.values[a] = m[a] := rfl
 
@@ -45,6 +45,14 @@ instance : Inhabited (FinMap α β) :=
   ⟨empty⟩
 
 @[simp, grind =] theorem getElem_empty (a : α) : (∅ : FinMap α β)[a] = 0 := rfl
+
+@[simp] theorem values_eq_empty_iff [LawfulEqOrd α] (m : FinMap α β) :
+    m.values = ∅ ↔ m = ∅ := by
+  constructor <;>
+  · intro h
+    ext a
+    replace h := congrArg (·[a]) h
+    simp_all
 
 end empty
 

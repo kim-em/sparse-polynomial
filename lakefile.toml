@@ -11,3 +11,4 @@ name = "SparsePolynomial"
 
 [[lean_lib]]
 name = "FinMapTest"
+globs = ["FinMapTest.+"]

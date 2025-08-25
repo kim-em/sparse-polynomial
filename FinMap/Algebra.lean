@@ -45,9 +45,9 @@ theorem getElem_add (zero_add_zero : (0 : β) + 0 = 0) (p₁ p₂ : FinMap α β
   rw [add_def]
   grind
 
-theorem add_zero (h : ∀ x : β, x + 0 = x) (p : FinMap α β) : p + 0 = p := by grind
+theorem add_zero (add_zero : ∀ x : β, x + 0 = x) (p : FinMap α β) : p + 0 = p := by grind
 
-theorem zero_add (h : ∀ x : β, 0 + x = x) (p : FinMap α β) : 0 + p = p := by grind
+theorem zero_add (zero_add : ∀ x : β, 0 + x = x) (p : FinMap α β) : 0 + p = p := by grind
 
 theorem add_comm
     (zero_add_zero : (0 : β) + 0 = 0)
@@ -113,5 +113,62 @@ theorem sub_eq_add_neg
   grind
 
 end sub
+
+
+section mul
+
+variable [DecidableEq β] [LawfulEqOrd α]
+variable [Mul β]
+
+-- This implementation could be changes to use `mergeWith` rather than `mergeWithAll`
+protected def mul (p₁ p₂ : FinMap α β) : FinMap α β where
+  values := p₁.values.mergeWithAll p₂.values fun _ b₁ b₂ => b₁ * b₂
+
+instance : Mul (FinMap α β) := ⟨FinMap.mul⟩
+
+private theorem mul_def (p₁ p₂ : FinMap α β) :
+    p₁ * p₂ = { values := p₁.values.mergeWithAll p₂.values fun _ b₁ b₂ => b₁ * b₂ } :=
+  rfl
+
+@[simp, grind =]
+theorem getElem_mul (zero_mul_zero : (0 : β) * 0 = 0) (p₁ p₂ : FinMap α β) (a : α) :
+    (p₁ * p₂)[a] = p₁[a] * p₂[a] := by
+  rw [mul_def]
+  grind
+
+theorem mul_zero (mul_zero : ∀ x : β, x * 0 = 0) (p : FinMap α β) : p * 0 = 0 := by grind
+
+theorem zero_mul (zero_mul : ∀ x : β, 0 * x = 0) (p : FinMap α β) : 0 * p = 0 := by grind
+
+theorem mul_comm
+    (zero_mul_zero : (0 : β) * 0 = 0)
+    (mul_comm : ∀ x y : β, x * y = y * x)
+    (p₁ p₂ : FinMap α β) : p₁ * p₂ = p₂ * p₁ := by grind
+
+theorem mul_assoc
+    (zero_mul_zero : (0 : β) * 0 = 0)
+    (mul_assoc : ∀ x y z : β, (x * y) * z = x * (y * z))
+    (p₁ p₂ p₃ : FinMap α β) : (p₁ * p₂) * p₃ = p₁ * (p₂ * p₃) := by grind
+
+end mul
+
+section distrib
+
+variable [DecidableEq β] [LawfulEqOrd α]
+variable [Add β] [Mul β]
+
+theorem left_distrib
+    (zero_add_zero : (0 : β) + 0 = 0)
+    (zero_mul_zero : (0 : β) * 0 = 0)
+    (left_distrib : ∀ x y z : β, x * (y + z) = x * y + x * z)
+    (p₁ p₂ p₃ : FinMap α β) : p₁ * (p₂ + p₃) = p₁ * p₂ + p₁ * p₃ := by grind
+
+theorem right_distrib
+    (zero_add_zero : (0 : β) + 0 = 0)
+    (zero_mul_zero : (0 : β) * 0 = 0)
+    (right_distrib : ∀ x y z : β, (x + y) * z = x * z + y * z)
+    (p₁ p₂ p₃ : FinMap α β) : (p₁ + p₂) * p₃ = p₁ * p₃ + p₂ * p₃ := by grind
+
+end distrib
 
 end FinMap
