@@ -19,6 +19,13 @@ theorem foldr_iff {xs : List α} {f : α → δ → δ} {init : δ} (p : δ → 
     p (xs.foldr f init) ↔ p init := by
   induction xs with grind
 
+/-- If a predicate remains true at each step of a fold,
+and it is true at the beginning, then it is true at the end. -/
+theorem foldr_of_init {xs : List α} {f : α → δ → δ} {init : δ} (p : δ → Prop)
+    (w : ∀ (a : α) (_ : a ∈ xs) (r : δ), p r → p (f a r)) :
+    p init → p (xs.foldr f init) := by
+  induction xs with grind
+
 /--
 If a predicate remains true at each step of a fold,
 and there is some step of the fold at which it becomes true,
