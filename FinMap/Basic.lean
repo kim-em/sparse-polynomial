@@ -63,6 +63,7 @@ section single
 variable [LawfulEqOrd α]
 
 /-- The single `FinMap` containing a single key-value pair. -/
+-- TODO: This could be defined without `DecidableEq`.
 protected def single (a : α) (b : β) : FinMap α β where
   values := TreeMapD.empty.insert a b
 

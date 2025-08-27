@@ -106,6 +106,9 @@ section foldr
 def foldr (m : FinMap α β) (f : α → β → δ → δ) (init : δ) : δ :=
   m.values.foldr (fun a b acc => f a b acc) init
 
+@[simp, grind =]
+theorem foldr_empty (f : α → β → δ → δ) (init : δ) : (∅ : FinMap α β).foldr f init = init := sorry
+
 variable [LawfulEqOrd α]
 
 @[simp, grind =]

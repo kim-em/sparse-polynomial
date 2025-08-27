@@ -3,7 +3,7 @@ Copyright (c) 2025 Lean FRO, LLC. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison
 -/
-import FinMap.Basic
+import FinMap.Support
 
 open Std
 
@@ -22,6 +22,10 @@ instance : Inhabited (FinMap α β) := ⟨0⟩
 
 @[simp, grind =]
 theorem getElem_zero (a : α) : (0 : FinMap α β)[a] = 0 := rfl
+
+@[simp, grind =]
+theorem foldr_zero (f : α → β → δ → δ) (init : δ) : (0 : FinMap α β).foldr f init = init :=
+  foldr_empty f init
 
 end zero
 
